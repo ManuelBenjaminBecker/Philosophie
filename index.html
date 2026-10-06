@@ -230,7 +230,6 @@
     .ghost.hit { animation: pop .28s ease-out forwards; pointer-events: none; }
     .ghost.wrong .ghost-body { background: #ffc2a9; }
     .ghost.wrong .ghost-body::after { background: radial-gradient(10px 9px at 10px 0, transparent 9px, #ffc2a9 10px) 0 0 / 20px 16px repeat-x; }
-    .ghost.correct .ghost-body { box-shadow: 0 0 24px rgba(210, 250, 115, .7); }
 
     .controls {
       display: flex;
@@ -267,6 +266,8 @@
 
     .modal {
       width: min(100%, 450px);
+      max-height: min(90vh, 800px);
+      overflow-y: auto;
       padding: 32px;
       border: 1px solid rgba(236, 243, 217, .2);
       border-radius: 20px;
@@ -281,6 +282,15 @@
     .modal strong { color: var(--ink); }
     .primary-button { min-height: 48px; margin-top: 23px; padding: 0 22px; border: 0; border-radius: 11px; color: #162019; background: var(--lime); font-size: 12px; font-weight: 900; letter-spacing: .1em; cursor: pointer; }
     .primary-button:hover { background: #e1ff9b; }
+    .reflection { margin-top: 24px; padding-top: 19px; border-top: 1px solid var(--line); text-align: left; }
+    .reflection h2 { margin: 0 0 5px; font-size: 18px; }
+    .reflection-intro { margin-bottom: 15px !important; font-size: 12px !important; }
+    .reflection label { display: block; margin-top: 13px; color: var(--ink); font-size: 12px; font-weight: 700; line-height: 1.5; }
+    .reflection textarea { display: block; width: 100%; min-height: 72px; margin-top: 6px; padding: 9px 10px; resize: vertical; border: 1px solid var(--line); border-radius: 9px; outline: none; color: var(--ink); background: #14211e; font: inherit; font-size: 13px; }
+    .reflection textarea:focus { border-color: var(--lime); }
+    .reflection-save { display: flex; align-items: center; gap: 12px; margin-top: 13px; }
+    .reflection-save .primary-button { margin-top: 0; }
+    .reflection-status { color: var(--muted); font-size: 11px; }
     .manifest-note { margin-top: 18px !important; color: #829186 !important; font-size: 11px !important; }
     .hidden { display: none !important; }
     .flash { position: absolute; z-index: 8; inset: 0; background: rgba(255, 133, 106, .22); animation: flash .2s ease-out forwards; pointer-events: none; }
@@ -348,7 +358,7 @@
       </div>
       <div class="hud-right">
         <div class="hud-label">Zeit · Leben</div>
-        <div class="hud-value"><span id="time">120</span><span class="hearts" id="hearts"> ♥5</span></div>
+        <div class="hud-value"><span id="time">300</span><span class="hearts" id="hearts"> ♥5</span></div>
       </div>
     </section>
 
@@ -389,7 +399,7 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-eyebrow">Das Gespenst geht um in Europa</div>
       <h1 id="modal-title">Manifest<br>Jagd</h1>
-      <p>Marx und Engels haben die Geister geweckt. Triff in Level 1 mindestens <strong>8 von 10 Antworten im ersten Versuch</strong>, um Level 2 freizuschalten. Dort warten mittelschwere Fragen und schnellere Geister!</p>
+      <p>Marx und Engels haben die Geister geweckt. Triff in Level 1 und 2 jeweils mindestens <strong>8 von 10 Antworten im ersten Versuch</strong>, um weiterzuziehen. In Level 3 warten wirklich schwere Fragen und rasende Geister!</p>
       <button class="primary-button" id="start" type="button">JAGD BEGINNEN</button>
       <p class="manifest-note">Maus / Touch zum Zielen · Leertaste zum Schießen<br>Am Handy: FEUER-Taste · Falsche Antworten kosten ein Leben</p>
     </section>
@@ -397,11 +407,11 @@
 
   <div class="modal-backdrop hidden" id="level-modal">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="level-title">
-      <div class="modal-eyebrow">Qualifikation geschafft · 8 von 10</div>
+      <div class="modal-eyebrow" id="level-eyebrow">Qualifikation geschafft · 8 von 10</div>
       <h1 id="level-title">Level 2</h1>
-      <p>Die nächste Geisterwelle bringt <strong>mittelschwere Fragen</strong> zum Manifest. Pass auf: Die Geister bewegen sich jetzt deutlich schneller!</p>
+      <p id="level-copy"></p>
       <button class="primary-button" id="continue" type="button">JETZT WEITER</button>
-      <p class="manifest-note">Level 2 startet automatisch. Punkte, Leben und Restzeit bleiben erhalten.</p>
+      <p class="manifest-note">Das nächste Level startet automatisch. Punkte, Leben und Restzeit bleiben erhalten.</p>
     </section>
   </div>
 
@@ -410,6 +420,20 @@
       <div class="modal-eyebrow" id="end-eyebrow">Die Jagd ist vorbei</div>
       <h1 id="end-title">Gut gejagt!</h1>
       <p id="end-copy"></p>
+      <section class="reflection" aria-labelledby="reflection-title">
+        <h2 id="reflection-title">Nach der Geisterjagd</h2>
+        <p class="reflection-intro">Das Manifest ist ein Text aus dem Jahr 1848. Was davon klingt heute noch nach?</p>
+        <label for="reflection-today">Wo erkennst du seine Fragen oder Widersprüche in der Gegenwart wieder?</label>
+        <textarea id="reflection-today" rows="3"></textarea>
+        <label for="reflection-think">Welcher Gedanke überzeugt dich — oder fordert deinen Widerspruch heraus? Warum?</label>
+        <textarea id="reflection-think" rows="3"></textarea>
+        <label for="reflection-takeaway">Was nimmst du aus der Jagd und dem Manifest für dich mit?</label>
+        <textarea id="reflection-takeaway" rows="3"></textarea>
+        <div class="reflection-save">
+          <button class="primary-button" id="save-reflection" type="button">GEDANKEN SPEICHERN</button>
+          <span class="reflection-status" id="reflection-status" aria-live="polite"></span>
+        </div>
+      </section>
       <button class="primary-button" id="restart" type="button">NOCH EINE RUNDE</button>
       <p class="manifest-note">Deine besten Ergebnisse stehen in der Hall of Fame.</p>
     </section>
@@ -419,63 +443,63 @@
     (() => {
       const questions = [
         {
-          level: "Aufwärmrunde · Das Manifest",
-          question: "Mit welchem berühmten Bild beginnt das Manifest der Kommunistischen Partei?",
-          answers: ["Ein Gespenst geht um in Europa", "Ein Sturm zieht über London", "Ein Adler kreist über Paris"],
+          level: "Leicht · Das Gespenst",
+          question: "In welchem Erdteil geht laut dem berühmten ersten Satz ein Gespenst um?",
+          answers: ["Europa", "Südamerika", "Asien"],
           correct: 0
         },
         {
-          level: "Runde 2 · Klassen",
-          question: "Welche Gruppen stehen laut Manifest im Zentrum der modernen Klassengegensätze?",
-          answers: ["Adel und Klerus", "Bourgeoisie und Proletariat", "Bauern und Handwerker"],
-          correct: 1
-        },
-        {
-          level: "Runde 3 · Begriffe",
-          question: "Wer gehört im Manifest zur Bourgeoisie?",
-          answers: ["Die Klasse der modernen Kapitalisten, die Produktionsmittel besitzen", "Alle Menschen, die in einer Stadt leben", "Die Klasse der Lohnarbeitenden ohne Produktionsmittel"],
+          level: "Leicht · Zwei Klassen",
+          question: "Welche zwei Klassen stellt das Manifest in der modernen Gesellschaft besonders gegenüber?",
+          answers: ["Bourgeoisie und Proletariat", "Ritter und Drachen", "Adel und Klerus"],
           correct: 0
         },
         {
-          level: "Runde 4 · Arbeit",
-          question: "Was müssen Proletarier laut Manifest verkaufen, um ihren Lebensunterhalt zu bestreiten?",
-          answers: ["Ihre politische Stimme", "Ihre Arbeitskraft", "Ihre Werkzeuge an den Adel"],
-          correct: 1
-        },
-        {
-          level: "Runde 5 · Geschichte",
-          question: "Wie beschreiben Marx und Engels die Geschichte aller bisherigen Gesellschaft?",
-          answers: ["Als fortlaufenden technischen Fortschritt", "Als Geschichte von Klassenkämpfen", "Als Abfolge großer Erfindungen"],
-          correct: 1
-        },
-        {
-          level: "Runde 6 · Organisation",
-          question: "Was unterscheidet die Kommunisten laut Manifest von den übrigen proletarischen Parteien?",
-          answers: ["Sie verfolgen keine vom Proletariat getrennten Interessen", "Sie vertreten ausschließlich die Interessen eines Landes", "Sie wollen die bestehende Klassenordnung erhalten"],
+          level: "Leicht · Die Bourgeoisie",
+          question: "Wer besitzt laut Manifest vor allem Fabriken und andere Produktionsmittel?",
+          answers: ["Die Bourgeoisie", "Das Proletariat als Klasse", "Die wandernden Gespenster"],
           correct: 0
         },
         {
-          level: "Runde 7 · Politische Ziele",
-          question: "Welches unmittelbare Ziel teilen Kommunisten laut Manifest mit den übrigen proletarischen Parteien?",
-          answers: ["Die Rückkehr zur Zunftwirtschaft", "Bildung des Proletariats zur Klasse und Eroberung der politischen Macht", "Die Stärkung der Monarchie"],
-          correct: 1
+          level: "Leicht · Lohnarbeit",
+          question: "Was verkaufen Proletarier, um ihren Lebensunterhalt zu verdienen?",
+          answers: ["Ihre Arbeitskraft", "Ihre Staatsbürgerschaft", "Die Fabriken ihrer Nachbarn"],
+          correct: 0
         },
         {
-          level: "Runde 8 · Eigentum",
-          question: "Welche Art von Eigentum stellen Marx und Engels im Abschnitt über die Kommunistenfrage infrage?",
-          answers: ["Jede persönliche Aneignung von Gebrauchsgegenständen", "Das bürgerliche Privateigentum an Produktionsmitteln", "Das Eigentum kleiner Handwerker an ihrem Werkzeug"],
-          correct: 1
+          level: "Leicht · Geschichte",
+          question: "Womit beschäftigt sich ein großer Teil des ersten Kapitels?",
+          answers: ["Mit Konflikten zwischen gesellschaftlichen Klassen", "Mit der Geschichte europäischer Gespenster", "Mit einer Reise zum Mond"],
+          correct: 0
         },
         {
-          level: "Runde 9 · Internationale Perspektive",
-          question: "Was bedeutet der Satz „Die Arbeiter haben kein Vaterland“ im Argument des Manifests am ehesten?",
-          answers: ["Arbeiter sollen keine Sprachen oder Kulturen haben", "Das Proletariat besitzt im bestehenden Staat keine politische Heimat im bürgerlichen Sinn", "Arbeiter dürfen nicht über Grenzen reisen"],
-          correct: 1
+          level: "Leicht · Die Kommunisten",
+          question: "Für wessen Interessen treten die Kommunisten laut Manifest ein?",
+          answers: ["Für die gemeinsamen Interessen des Proletariats", "Nur für die Interessen eines einzelnen Königs", "Für eine Rückkehr zur Feudalherrschaft"],
+          correct: 0
         },
         {
-          level: "Finale · Der Schlusssatz",
-          question: "Wie lautet die berühmte Schlussforderung des Manifests?",
-          answers: ["Proletarier aller Länder, vereinigt euch!", "Arbeiter aller Städte, geht nach Hause!", "Bürger aller Länder, verteidigt das Eigentum!"],
+          level: "Leicht · Gemeinsam stark",
+          question: "Welche bekannte Aufforderung steht am Ende des Manifests?",
+          answers: ["Proletarier aller Länder, vereinigt euch!", "Kapitalisten aller Länder, zählt eure Münzen!", "Bürger Europas, schließt die Grenzen!"],
+          correct: 0
+        },
+        {
+          level: "Leicht · Eigentum",
+          question: "Welche Form von Eigentum kritisieren Marx und Engels besonders?",
+          answers: ["Das bürgerliche Privateigentum an Produktionsmitteln", "Persönliche Dinge des täglichen Gebrauchs", "Das Eigentum an einem Lieblingsbuch"],
+          correct: 0
+        },
+        {
+          level: "Leicht · Über Grenzen",
+          question: "An wen richtet sich der Schlusssatz des Manifests?",
+          answers: ["An Proletarier aller Länder", "An die Könige aller Länder", "An die Geister aller Wälder"],
+          correct: 0
+        },
+        {
+          level: "Leicht · Erscheinungsjahr",
+          question: "In welchem Jahr wurde das Manifest veröffentlicht?",
+          answers: ["1848", "1789", "1917"],
           correct: 0
         }
       ];
@@ -541,6 +565,68 @@
           correct: 0
         }
       ];
+      const hardQuestions = [
+        {
+          level: "Schwer · Produktionsverhältnisse",
+          question: "Wie beschreibt das Manifest den Zusammenhang zwischen Produktivkräften und Eigentumsverhältnissen?",
+          answers: ["Produktivkräfte können mit Eigentumsverhältnissen kollidieren, die ihre Entwicklung zuvor gefördert haben", "Produktivkräfte passen sich stets reibungslos an bestehende Eigentumsverhältnisse an", "Ein Konflikt zwischen Produktion und Eigentum entsteht erst, wenn es keinerlei Handel mehr gibt"],
+          correct: 0
+        },
+        {
+          level: "Schwer · Lohnarbeit und Kapital",
+          question: "Warum reicht laut dem Abschnitt über die Kommunistenfrage die bloße Abschaffung persönlichen Eigentums nicht aus, um das kommunistische Ziel zu beschreiben?",
+          answers: ["Weil die Kritik auf das bürgerliche Eigentum an Produktionsmitteln und dessen soziale Macht zielt, nicht auf persönliche Gebrauchsgegenstände", "Weil das Manifest die private Verfügung über Produktionsmittel beibehalten, aber Erbschaften beschränken will", "Weil persönliche Gebrauchsgegenstände als einzige Form des Eigentums gelten, die Klassenverhältnisse hervorbringt"],
+          correct: 0
+        },
+        {
+          level: "Schwer · Gesellschaftliche Ideen",
+          question: "Was behauptet das Manifest über die jeweils herrschenden Ideen einer Epoche?",
+          answers: ["Die materiell herrschende Klasse verfügt in der Regel auch über die geistigen Produktionsmittel", "Ideen sind für alle Klassen gleich zugänglich und daher unabhängig von Herrschaftsverhältnissen", "Die unterdrückte Klasse bestimmt unabhängig von ihrer materiellen Lage stets die herrschenden Vorstellungen"],
+          correct: 0
+        },
+        {
+          level: "Schwer · Internationale Klasse",
+          question: "Wie verbindet das Manifest den nationalen Charakter des proletarischen Kampfes mit seiner internationalen Perspektive?",
+          answers: ["Der Kampf nimmt zunächst eine nationale politische Form an, während die gemeinsamen Klasseninteressen über Grenzen reichen", "Weil das Proletariat kein Vaterland hat, soll es auf jeden politischen Kampf im eigenen Land verzichten", "Internationale Solidarität entsteht erst nach dem vollständigen Sieg in jedem einzelnen Land"],
+          correct: 0
+        },
+        {
+          level: "Schwer · Individuum und Gemeinschaft",
+          question: "Was meint die Schlussformel, die freie Entwicklung jedes Einzelnen sei die Bedingung für die freie Entwicklung aller?",
+          answers: ["Die Entfaltung Einzelner soll nicht auf der Unterordnung anderer beruhen, sondern mit gemeinsamer Freiheit vereinbar sein", "Individuelle Interessen sollen zugunsten eines einheitlichen gesellschaftlichen Plans bedeutungslos werden", "Gemeinsame Freiheit entsteht, wenn persönliche Fähigkeiten ausschließlich im privaten Bereich ausgeübt werden"],
+          correct: 0
+        },
+        {
+          level: "Schwer · Krisen",
+          question: "Warum nennt das Manifest die Überproduktionskrise einen Widerspruch der bürgerlichen Gesellschaft?",
+          answers: ["Weil gesellschaftlicher Überfluss und unbefriedigte Bedürfnisse zugleich auftreten können, während die Produktionsordnung den Überfluss begrenzt", "Weil Unternehmen in einer Krise mehr produzieren, obwohl die Nachfrage den Bedarf bereits vollständig deckt", "Weil der Widerspruch allein darin besteht, dass jede Krise die Produktivkräfte dauerhaft vermehrt"],
+          correct: 0
+        },
+        {
+          level: "Schwer · Politische Macht",
+          question: "Welche Beziehung stellt das Manifest zwischen politischer Herrschaft und Klasseninteressen her?",
+          answers: ["Staatliche politische Macht erscheint als organisierte Gewalt einer Klasse zur Unterdrückung einer anderen", "Politische Macht vermittelt im Manifest dauerhaft neutral zwischen allen Klasseninteressen", "Klassenherrschaft beruht laut Manifest allein auf persönlichen Vorurteilen einzelner Amtsträger"],
+          correct: 0
+        },
+        {
+          level: "Schwer · Maßnahmen und Geschichte",
+          question: "Wie ordnet das Manifest seine bekannten politischen Übergangsmaßnahmen selbst ein?",
+          answers: ["Als Maßnahmen, deren Anwendung je nach Land verschieden ist und die nicht überall identisch sein müssen", "Als abschließendes Modell, das unabhängig von historischen Bedingungen wortgetreu umgesetzt werden soll", "Als unverbindliche Beispiele, die laut Manifest keinerlei Bezug zu politischen Übergängen haben"],
+          correct: 0
+        },
+        {
+          level: "Schwer · Aufhebung",
+          question: "Was soll laut Manifest mit dem Klassengegensatz geschehen, wenn die Klassenbedingungen beseitigt werden?",
+          answers: ["Die politische Herrschaft einer Klasse über andere verliert ihre gesellschaftliche Grundlage", "Die Klassengegensätze bleiben bestehen, werden aber durch eine gerechtere Verteilung ausgeglichen", "Die politische Macht geht dauerhaft auf eine neue Klasse über, die alle anderen vertritt"],
+          correct: 0
+        },
+        {
+          level: "Schwer · Kritische Lektüre",
+          question: "Welche Lesart unterscheidet am besten zwischen der Analyse des Manifests und einer unkritischen Vorhersage?",
+          answers: ["Man kann seine Begriffe und Prognosen historisch prüfen, statt politische Zuspitzungen für zwangsläufige Gesetze zu halten", "Seine historischen Prognosen gelten als bewiesen, sobald einzelne Beispiele dazu passen", "Eine historische Analyse ist nur dann kritisch, wenn man ihre theoretischen Voraussetzungen gar nicht erst prüft"],
+          correct: 0
+        }
+      ];
 
       const scene = document.querySelector("#scene");
       const aim = document.querySelector("#aim");
@@ -563,14 +649,27 @@
       const endEyebrow = document.querySelector("#end-eyebrow");
       const endCopy = document.querySelector("#end-copy");
       const fireButton = document.querySelector("#fire");
+      const levelTitle = document.querySelector("#level-title");
+      const levelEyebrow = document.querySelector("#level-eyebrow");
+      const levelCopy = document.querySelector("#level-copy");
+      const reflectionStatus = document.querySelector("#reflection-status");
+      const reflectionFields = ["#reflection-today", "#reflection-think", "#reflection-takeaway"]
+        .map(selector => document.querySelector(selector));
+      const questionSets = [questions, mediumQuestions, hardQuestions];
+      const levelDetails = [
+        { name: "Level 1", difficulty: "Leicht", speed: 0.65 },
+        { name: "Level 2", difficulty: "Mittelschwer", speed: 2.2 },
+        { name: "Level 3", difficulty: "WIRKLICH schwer", speed: 4.5 }
+      ];
       const maxLives = 5;
       let level = 0;
       let round = 0;
       let firstTryCorrect = 0;
       let firstAttemptMade = false;
+      let activeQuestions = questions.slice();
       let score = 0;
       let lives = maxLives;
-      let seconds = 120;
+      let seconds = 300;
       let started = false;
       let locked = false;
       let levelTransitionPending = false;
@@ -580,7 +679,15 @@
       let aimPoint = { x: 0, y: 0 };
 
       function currentQuestions() {
-        return level === 0 ? questions : mediumQuestions;
+        return activeQuestions;
+      }
+
+      function shuffleQuestions() {
+        activeQuestions = questionSets[level].slice();
+        for (let index = activeQuestions.length - 1; index > 0; index -= 1) {
+          const swap = Math.floor(Math.random() * (index + 1));
+          [activeQuestions[index], activeQuestions[swap]] = [activeQuestions[swap], activeQuestions[index]];
+        }
       }
 
       function placeAim(clientX, clientY) {
@@ -645,8 +752,10 @@
         roundEl.textContent = Math.min(round + 1, currentQuestions().length);
         totalRoundsEl.textContent = currentQuestions().length;
         roundNoteEl.textContent = level === 0
-          ? `Ersttreffer: ${firstTryCorrect}/10 für Level 2`
-          : "Mittel · Geister 2× schneller";
+          ? `${levelDetails[level].difficulty} · langsam · Ersttreffer: ${firstTryCorrect}/10 für Level 2`
+          : level === 1
+            ? `${levelDetails[level].difficulty} · schnell · Ersttreffer: ${firstTryCorrect}/10 für Level 3`
+            : `${levelDetails[level].difficulty} · Geister sehr schnell`;
         progressEl.style.width = `${(round / currentQuestions().length) * 100}%`;
       }
 
@@ -670,13 +779,13 @@
         shuffledAnswers.forEach((answer, index) => {
           const element = document.createElement("button");
           element.type = "button";
-          element.className = `ghost${answer.correct ? " correct" : ""}`;
+          element.className = "ghost";
           element.setAttribute("aria-label", `Antwort: ${answer.text}`);
           element.innerHTML = `<span class="ghost-body"><span class="ghost-eyes"><i></i><i></i></span></span><span class="ghost-label"></span>`;
           element.querySelector(".ghost-label").textContent = answer.text;
           const pos = positions[index];
           const drift = (Math.random() * 2 - 1) * 9;
-          const speedMultiplier = level === 0 ? 1 : 2.2;
+          const speedMultiplier = levelDetails[level].speed;
           const state = {
             element, correct: answer.correct,
             x: (pos.x / 100) * scene.clientWidth,
@@ -750,19 +859,19 @@
         locked = true;
         target.element.classList.add("hit");
         score += 100 + Math.max(0, seconds) * 2;
-        feedbackEl.textContent = level === 0
-          ? `Richtig! Ersttreffer ${firstTryCorrect}/10 für Level 2.`
+        feedbackEl.textContent = level < 2
+          ? `Richtig! Ersttreffer ${firstTryCorrect}/10 für Level ${level + 2}.`
           : "Richtig! Wissen sitzt. +Punkte";
         updateHud();
         window.setTimeout(() => {
           round += 1;
           firstAttemptMade = false;
-          if (level === 0 && firstTryCorrect >= 8) {
-            unlockLevelTwo();
+          if (level < 2 && firstTryCorrect >= 8) {
+            advanceLevel();
             return;
           }
           if (round >= currentQuestions().length) {
-            if (level === 0) {
+            if (level < 2) {
               finish(false, "qualification");
               return;
             }
@@ -778,9 +887,9 @@
         const current = currentQuestions()[round];
         tagEl.textContent = current.level;
         questionEl.textContent = current.question;
-        questionHintEl.textContent = level === 0
-          ? "Mindestens 8 richtige Erstversuche schalten Level 2 frei. Falsche Treffer kosten ein Leben."
-          : "Die Geister sind schneller — ziele vorausschauend und triff die richtige Antwort.";
+        questionHintEl.textContent = level < 2
+          ? `Mindestens 8 richtige Erstversuche schalten Level ${level + 2} frei. Falsche Treffer kosten ein Leben.`
+          : "WIRKLICH schwere Fragen und sehr schnelle Geister — lies genau und ziele vorausschauend.";
         feedbackEl.textContent = firstAttemptMade
           ? "Falscher Erstversuch — finde jetzt die richtige Antwort."
           : "Triff die richtige Antwort!";
@@ -797,23 +906,31 @@
         }, 1000);
       }
 
-      function unlockLevelTwo() {
+      function advanceLevel() {
         started = false;
         locked = true;
         levelTransitionPending = true;
         window.clearInterval(timer);
         clearGhosts();
-        level = 1;
+        level += 1;
         round = 0;
         firstTryCorrect = 0;
         firstAttemptMade = false;
+        shuffleQuestions();
+        levelEyebrow.textContent = `Qualifikation geschafft · 8 von 10 in Level ${level}`;
+        levelTitle.textContent = `Level ${level + 1}`;
+        if (level === 1) {
+          levelCopy.textContent = "Die nächste Geisterwelle bringt mittelschwere Fragen zum Manifest. Die Geister ziehen schneller weiter — erreiche auch hier 8 von 10 Ersttreffern, um Level 3 freizuschalten.";
+        } else {
+          levelCopy.textContent = "Die finale Welle stellt dir WIRKLICH schwere Fragen, die Textverständnis und genaue Lektüre verlangen. Die Geister sind jetzt sehr schnell!";
+        }
         levelModal.classList.remove("hidden");
         document.querySelector("#continue").focus();
         presentQuestion();
-        levelTransitionTimer = window.setTimeout(beginLevelTwo, 1200);
+        levelTransitionTimer = window.setTimeout(beginNextLevel, 1200);
       }
 
-      function beginLevelTwo() {
+      function beginNextLevel() {
         if (!levelTransitionPending) return;
         window.clearTimeout(levelTransitionTimer);
         levelTransitionPending = false;
@@ -833,11 +950,11 @@
         endEyebrow.textContent = won ? "Alle Geister vertrieben" : "Die Geister ziehen weiter";
         endTitle.textContent = won ? "Manifest gemeistert!" : "Die Jagd ist vorbei";
         if (won) {
-          endCopy.textContent = `Du hast beide Level gemeistert und ${score} Punkte gesammelt. Europa ist fürs Erste geisterfrei!`;
+          endCopy.textContent = `Du hast alle drei Level gemeistert und ${score} Punkte gesammelt. Europa ist fürs Erste geisterfrei!`;
         } else if (reason === "qualification") {
-          endCopy.textContent = `Du hast ${firstTryCorrect} von 10 Fragen im ersten Versuch richtig beantwortet. Für Level 2 brauchst du mindestens 8. Gesammelt: ${score} Punkte.`;
+          endCopy.textContent = `Du hast ${firstTryCorrect} von 10 Fragen in ${levelDetails[level].name} im ersten Versuch richtig beantwortet. Für Level ${level + 2} brauchst du mindestens 8. Gesammelt: ${score} Punkte.`;
         } else if (reason === "lives") {
-          endCopy.textContent = `Keine Leben mehr! Du hast ${firstTryCorrect} von 10 Fragen im ersten Versuch richtig beantwortet und ${score} Punkte gesammelt.`;
+          endCopy.textContent = `Keine Leben mehr! Du warst in ${levelDetails[level].name} und hast ${score} Punkte gesammelt.`;
         } else {
           endCopy.textContent = `Die Zeit ist um! Du hast ${score} Punkte gesammelt. Lies dich schlau und komm wieder!`;
         }
@@ -845,16 +962,43 @@
         document.querySelector("#restart").focus();
       }
 
+      function loadReflection() {
+        try {
+          const saved = JSON.parse(localStorage.getItem("manifestjagd-reflection") || "[]");
+          if (Array.isArray(saved)) {
+            reflectionFields.forEach((field, index) => {
+              field.value = typeof saved[index] === "string" ? saved[index] : "";
+            });
+          }
+        } catch (error) {
+          console.warn("Gespeicherte Gedanken konnten nicht geladen werden.", error);
+          reflectionStatus.textContent = "Gespeicherte Gedanken konnten nicht geladen werden.";
+        }
+      }
+
+      function saveReflection() {
+        try {
+          localStorage.setItem("manifestjagd-reflection", JSON.stringify(
+            reflectionFields.map(field => field.value)
+          ));
+          reflectionStatus.textContent = "Deine Gedanken sind auf diesem Gerät gespeichert.";
+        } catch (error) {
+          console.warn("Gedanken konnten nicht gespeichert werden.", error);
+          reflectionStatus.textContent = "Speichern nicht möglich — bitte später erneut versuchen.";
+        }
+      }
+
       function startGame() {
         window.clearTimeout(levelTransitionTimer);
         levelTransitionPending = false;
         round = 0;
         level = 0;
+        shuffleQuestions();
         firstTryCorrect = 0;
         firstAttemptMade = false;
         score = 0;
         lives = maxLives;
-        seconds = 120;
+        seconds = 300;
         started = true;
         locked = false;
         startModal.classList.add("hidden");
@@ -868,7 +1012,8 @@
 
       document.querySelector("#start").addEventListener("click", startGame);
       document.querySelector("#restart").addEventListener("click", startGame);
-      document.querySelector("#continue").addEventListener("click", beginLevelTwo);
+      document.querySelector("#continue").addEventListener("click", beginNextLevel);
+      document.querySelector("#save-reflection").addEventListener("click", saveReflection);
       fireButton.addEventListener("pointerdown", event => {
         event.preventDefault();
         shoot();
@@ -881,6 +1026,7 @@
       });
 
       showScores();
+      loadReflection();
       updateHud();
       const initialBounds = scene.getBoundingClientRect();
       aimPoint = { x: initialBounds.width / 2, y: initialBounds.height / 2 };

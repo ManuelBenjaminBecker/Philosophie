@@ -303,6 +303,17 @@
     .reflection-save { display: flex; align-items: center; gap: 12px; margin-top: 13px; }
     .reflection-save .primary-button { margin-top: 0; }
     .reflection-status { color: var(--muted); font-size: 11px; }
+    .reflection-counter { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; font-weight: 500; }
+    .reflection-counter.ready { color: var(--lime); }
+    .leaderboard { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); text-align: left; }
+    .leaderboard h2 { margin: 0 0 10px; font-size: 18px; }
+    .leaderboard-scroll { max-height: 260px; overflow: auto; border: 1px solid var(--line); border-radius: 9px; }
+    .leaderboard table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
+    .leaderboard th, .leaderboard td { padding: 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .leaderboard th { position: sticky; top: 0; color: var(--lime); background: #1b2925; }
+    .leaderboard tr:last-child td { border-bottom: 0; }
+    .leaderboard details summary { color: var(--lime); cursor: pointer; }
+    .leaderboard-answer { margin-top: 8px; color: #bac5b6; white-space: pre-wrap; }
     .manifest-note { margin-top: 18px !important; color: #829186 !important; font-size: 11px !important; }
     .hidden { display: none !important; }
     .flash { position: absolute; z-index: 8; inset: 0; background: rgba(255, 133, 106, .22); animation: flash .2s ease-out forwards; pointer-events: none; }
@@ -383,11 +394,11 @@
       <div class="question-hint" id="question-hint">Lies die Frage und verfasse zuerst deine eigene Antwort.</div>
       <div class="question-response">
         <label for="question-response">
-          <span>Deine Antwort in eigenen Worten</span>
-          <span class="word-count" id="word-count">0 / 30 Wörter</span>
+          <span>Schreibe die richtige Geisterantwort genau ab</span>
+          <span class="word-count" id="word-count">Noch nicht exakt</span>
         </label>
-        <textarea id="question-response" rows="2" maxlength="3000" aria-describedby="response-hint" autocomplete="off"></textarea>
-        <div class="response-hint" id="response-hint" aria-live="polite">Zum Schießen musst du mindestens 30 Wörter eingeben.</div>
+        <textarea id="question-response" rows="2" maxlength="500" aria-describedby="response-hint" autocomplete="off" placeholder="Antwort des richtigen Geistes eingeben …"></textarea>
+        <div class="response-hint" id="response-hint" aria-live="polite">Zum Schießen muss der Wortlaut genau stimmen.</div>
       </div>
     </section>
 
@@ -422,7 +433,7 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-eyebrow">Das Gespenst geht um in Europa</div>
       <h1 id="modal-title">Manifest<br>Jagd</h1>
-      <p>Marx und Engels haben die Geister geweckt. Gib zuerst deinen Namen ein und verfasse <strong>bei jeder Frage mindestens 30 Wörter</strong>, bevor du schießt. Für Level 2 und 3 brauchst du jeweils 8 von 10 richtige Ersttreffer.</p>
+      <p>Marx und Engels haben die Geister geweckt. Gib zuerst deinen Namen ein und tippe bei jeder Frage den <strong>genauen Wortlaut der richtigen Geisterantwort</strong> ein, bevor du schießt. Für Level 2 und 3 brauchst du jeweils 8 von 10 richtige Ersttreffer.</p>
       <label class="name-label" for="player-name">Dein Name</label>
       <input class="name-input" id="player-name" type="text" maxlength="40" autocomplete="name" placeholder="Name eingeben" required>
       <div class="name-status" id="name-status" aria-live="polite"></div>
@@ -448,19 +459,28 @@
       <p id="end-copy"></p>
       <section class="reflection" aria-labelledby="reflection-title">
         <h2 id="reflection-title">Nach der Geisterjagd</h2>
-        <p class="reflection-intro">Das Manifest ist ein Text aus dem Jahr 1848. Was davon klingt heute noch nach?</p>
-        <label for="reflection-today">Wo erkennst du seine Fragen oder Widersprüche in der Gegenwart wieder?</label>
+        <p class="reflection-intro">Das Manifest ist ein Text aus dem Jahr 1848. Was davon klingt heute noch nach? Schreibe zu jeder Frage mindestens 30 Wörter. Danach erscheint dein Ergebnis im Leaderboard.</p>
+        <label for="reflection-today">Wo erkennst du seine Fragen oder Widersprüche in der Gegenwart wieder?<span class="reflection-counter" id="reflection-count-today">0 / 30 Wörter</span></label>
         <textarea id="reflection-today" rows="3"></textarea>
-        <label for="reflection-think">Welcher Gedanke überzeugt dich — oder fordert deinen Widerspruch heraus? Warum?</label>
+        <label for="reflection-think">Welcher Gedanke überzeugt dich — oder fordert deinen Widerspruch heraus? Warum?<span class="reflection-counter" id="reflection-count-think">0 / 30 Wörter</span></label>
         <textarea id="reflection-think" rows="3"></textarea>
-        <label for="reflection-takeaway">Was nimmst du aus der Jagd und dem Manifest für dich mit?</label>
+        <label for="reflection-takeaway">Was nimmst du aus der Jagd und dem Manifest für dich mit?<span class="reflection-counter" id="reflection-count-takeaway">0 / 30 Wörter</span></label>
         <textarea id="reflection-takeaway" rows="3"></textarea>
         <div class="reflection-save">
-          <button class="primary-button" id="save-reflection" type="button">GEDANKEN SPEICHERN</button>
+          <button class="primary-button" id="save-result" type="button" disabled>ABSCHLUSS &amp; LEADERBOARD SPEICHERN</button>
           <span class="reflection-status" id="reflection-status" aria-live="polite"></span>
         </div>
       </section>
-      <button class="primary-button" id="restart" type="button">NOCH EINE RUNDE</button>
+      <section class="leaderboard hidden" id="end-leaderboard" aria-label="Leaderboard">
+        <h2>Leaderboard · Punktzahl &amp; Abschlussantworten</h2>
+        <div class="leaderboard-scroll">
+          <table>
+            <thead><tr><th>Spielername</th><th>Punkte</th><th>Abschlussantworten</th></tr></thead>
+            <tbody id="leaderboard-rows"></tbody>
+          </table>
+        </div>
+      </section>
+      <button class="primary-button" id="restart" type="button" disabled>NOCH EINE RUNDE</button>
       <p class="manifest-note">Deine besten Ergebnisse stehen in der Hall of Fame.</p>
     </section>
   </div>
@@ -686,8 +706,14 @@
       const reflectionStatus = document.querySelector("#reflection-status");
       const reflectionFields = ["#reflection-today", "#reflection-think", "#reflection-takeaway"]
         .map(selector => document.querySelector(selector));
+      const reflectionCounters = ["#reflection-count-today", "#reflection-count-think", "#reflection-count-takeaway"]
+        .map(selector => document.querySelector(selector));
+      const endLeaderboard = document.querySelector("#end-leaderboard");
+      const leaderboardRows = document.querySelector("#leaderboard-rows");
+      const restartButton = document.querySelector("#restart");
+      const saveResultButton = document.querySelector("#save-result");
       const questionSets = [questions, mediumQuestions, hardQuestions];
-      const minimumResponseWords = 30;
+      const minimumReflectionWords = 30;
       const levelDetails = [
         { name: "Level 1", difficulty: "Leicht", speed: 0.65 },
         { name: "Level 2", difficulty: "Mittelschwer", speed: 2.2 },
@@ -701,6 +727,7 @@
       let responseRecorded = false;
       let playerName = "";
       let recordedResponses = [];
+      let resultSaved = false;
       let activeQuestions = questions.slice();
       let score = 0;
       let lives = maxLives;
@@ -730,20 +757,39 @@
         return text.match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu)?.length || 0;
       }
 
+      function normalizeAnswer(text) {
+        return text.normalize("NFC").trim().replace(/\s+/gu, " ");
+      }
+
+      function updateReflectionState() {
+        const answers = reflectionFields.map((field, index) => {
+          const words = countWords(field.value);
+          const complete = words >= minimumReflectionWords;
+          reflectionCounters[index].textContent = `${words} / ${minimumReflectionWords} Wörter`;
+          reflectionCounters[index].classList.toggle("ready", complete);
+          return complete;
+        });
+        saveResultButton.disabled = resultSaved || !answers.every(Boolean);
+      }
+
+      function correctAnswerText() {
+        const answer = ghosts.find(ghost => ghost.correct);
+        return answer ? answer.element.querySelector(".ghost-label").textContent : "";
+      }
+
       function updateResponseState() {
-        const count = countWords(responseField.value);
-        const ready = count >= minimumResponseWords;
-        wordCountEl.textContent = `${count} / ${minimumResponseWords} Wörter`;
+        const correctAnswer = correctAnswerText();
+        const ready = correctAnswer !== "" && normalizeAnswer(responseField.value) === normalizeAnswer(correctAnswer);
+        wordCountEl.textContent = ready ? "Exakt" : "Noch nicht exakt";
         wordCountEl.classList.toggle("ready", ready);
         responseHintEl.classList.toggle("invalid", !ready);
         responseHintEl.textContent = ready
-          ? "Antwort vollständig — du kannst jetzt schießen."
-          : `Noch ${minimumResponseWords - count} ${minimumResponseWords - count === 1 ? "Wort" : "Wörter"} bis zum Schuss.`;
-        if (ready && timeExpired && started) finish(false, "time");
+          ? "Richtiger Wortlaut — du kannst jetzt schießen."
+          : "Tippe den genauen Wortlaut der richtigen Geisterantwort ein.";
       }
 
       function recordCurrentResponse() {
-        if (responseRecorded || countWords(responseField.value) < minimumResponseWords) return false;
+        if (responseRecorded || normalizeAnswer(responseField.value) !== normalizeAnswer(correctAnswerText())) return false;
         const current = currentQuestions()[round];
         if (!current) return false;
         recordedResponses.push({
@@ -776,8 +822,16 @@
       function showScores() {
         let entries = [];
         try {
-          entries = JSON.parse(localStorage.getItem("manifestjagd-scores") || "[]");
-          if (!Array.isArray(entries)) entries = [];
+          const legacyScores = JSON.parse(localStorage.getItem("manifestjagd-scores") || "[]");
+          const results = JSON.parse(localStorage.getItem("manifestjagd-results") || "[]");
+          entries = [
+            ...(Array.isArray(legacyScores) ? legacyScores : []),
+            ...(Array.isArray(results) ? results : []).map(result => ({
+              ...result,
+              date: result.date ? new Date(result.date).toLocaleDateString("de-DE") : "—"
+            }))
+          ];
+          entries.sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
         } catch (error) {
           console.warn("Highscores konnten nicht gelesen werden.", error);
         }
@@ -801,32 +855,62 @@
         }
       }
 
-      function saveScore() {
+      function showLeaderboard() {
         let entries = [];
         try {
-          entries = JSON.parse(localStorage.getItem("manifestjagd-scores") || "[]");
+          entries = JSON.parse(localStorage.getItem("manifestjagd-results") || "[]");
           if (!Array.isArray(entries)) entries = [];
-          const date = new Date().toLocaleDateString("de-DE");
-          entries.push({ score, name: playerName, date });
-          entries.sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
-          localStorage.setItem("manifestjagd-scores", JSON.stringify(entries.slice(0, 3)));
         } catch (error) {
-          console.warn("Highscore konnte nicht gespeichert werden.", error);
+          console.warn("Leaderboard konnte nicht gelesen werden.", error);
         }
-        try {
-          const results = JSON.parse(localStorage.getItem("manifestjagd-results") || "[]");
-          const history = Array.isArray(results) ? results : [];
-          history.push({
-            name: playerName,
-            score,
-            date: new Date().toISOString(),
-            responses: recordedResponses
+        leaderboardRows.replaceChildren();
+        entries
+          .map((entry, index) => ({ ...entry, index }))
+          .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0) || b.index - a.index)
+          .forEach(entry => {
+            const row = document.createElement("tr");
+            const player = document.createElement("td");
+            player.textContent = typeof entry.name === "string" ? entry.name : "Unbekannt";
+            const points = document.createElement("td");
+            points.textContent = String(Number(entry.score) || 0);
+            const answerCell = document.createElement("td");
+            const details = document.createElement("details");
+            const summary = document.createElement("summary");
+            summary.textContent = "3 Antworten ansehen";
+            details.append(summary);
+            const prompts = [
+              "Aktualität heute",
+              "Eigene Einschätzung",
+              "Was nehme ich mit?"
+            ];
+            const answers = Array.isArray(entry.reflectionAnswers) ? entry.reflectionAnswers : [];
+            prompts.forEach((prompt, index) => {
+              const answer = document.createElement("div");
+              answer.className = "leaderboard-answer";
+              answer.textContent = `${prompt}: ${answers[index] || "—"}`;
+              details.append(answer);
+            });
+            answerCell.append(details);
+            row.append(player, points, answerCell);
+            leaderboardRows.append(row);
           });
-          localStorage.setItem("manifestjagd-results", JSON.stringify(history.slice(-10)));
-        } catch (error) {
-          console.warn("Frageantworten konnten nicht gespeichert werden.", error);
-        }
+        endLeaderboard.classList.remove("hidden");
+      }
+
+      function saveScore(reflectionAnswers) {
+        const date = new Date().toISOString();
+        const results = JSON.parse(localStorage.getItem("manifestjagd-results") || "[]");
+        const history = Array.isArray(results) ? results : [];
+        history.push({
+          name: playerName,
+          score,
+          date,
+          responses: recordedResponses,
+          reflectionAnswers
+        });
+        localStorage.setItem("manifestjagd-results", JSON.stringify(history.slice(-50)));
         showScores();
+        showLeaderboard();
       }
 
       function updateHud() {
@@ -908,14 +992,6 @@
 
       function shoot() {
         if (!started || locked) return;
-        if (countWords(responseField.value) < minimumResponseWords) {
-          updateResponseState();
-          responseHintEl.textContent = `Erst mindestens ${minimumResponseWords} Wörter eingeben, dann kannst du schießen.`;
-          responseHintEl.classList.add("invalid");
-          feedbackEl.textContent = "Schreibe zuerst mindestens 30 Wörter zu dieser Frage.";
-          responseField.focus();
-          return;
-        }
         if (timeExpired) return;
         const shot = document.createElement("span");
         shot.className = "shot";
@@ -933,6 +1009,12 @@
         });
         if (!target) {
           feedbackEl.textContent = "Daneben! Ziele genau auf einen Geist.";
+          return;
+        }
+        if (normalizeAnswer(responseField.value) !== normalizeAnswer(correctAnswerText())) {
+          updateResponseState();
+          feedbackEl.textContent = "Tippe zuerst den genauen Wortlaut der richtigen Geisterantwort ein.";
+          responseField.focus();
           return;
         }
         if (!target.correct) {
@@ -982,6 +1064,8 @@
         const current = currentQuestions()[round];
         responseRecorded = false;
         responseField.value = "";
+        wordCountEl.textContent = "Noch nicht exakt";
+        wordCountEl.classList.remove("ready");
         tagEl.textContent = current.level;
         questionEl.textContent = current.question;
         questionHintEl.textContent = level < 2
@@ -1001,18 +1085,11 @@
           seconds -= 1;
           updateHud();
           if (seconds <= 0) {
-            seconds = 0;
-            timeExpired = true;
-            window.clearInterval(timer);
-            if (countWords(responseField.value) >= minimumResponseWords) {
+              seconds = 0;
+              timeExpired = true;
+              window.clearInterval(timer);
               finish(false, "time");
-            } else {
-              locked = true;
-              responseHintEl.textContent = "Die Zeit ist um. Ergänze mindestens 30 Wörter, um deine Jagd abzuschließen.";
-              responseHintEl.classList.add("invalid");
-              feedbackEl.textContent = "Zeit abgelaufen — vervollständige zuerst deine Antwort.";
             }
-          }
         }, 1000);
       }
 
@@ -1055,9 +1132,20 @@
         if (!started) return;
         recordCurrentResponse();
         started = false;
+        resultSaved = false;
         window.clearInterval(timer);
         clearGhosts();
-        saveScore();
+        reflectionFields.forEach(field => {
+          field.value = "";
+          field.disabled = false;
+        });
+        endLeaderboard.classList.add("hidden");
+        leaderboardRows.replaceChildren();
+        restartButton.disabled = true;
+        saveResultButton.disabled = true;
+        saveResultButton.textContent = "ABSCHLUSS & LEADERBOARD SPEICHERN";
+        reflectionStatus.textContent = "Alle drei Antworten müssen mindestens 30 Wörter umfassen.";
+        updateReflectionState();
         endEyebrow.textContent = won ? "Alle Geister vertrieben" : "Die Geister ziehen weiter";
         endTitle.textContent = won ? "Manifest gemeistert!" : "Die Jagd ist vorbei";
         if (won) {
@@ -1073,29 +1161,26 @@
         document.querySelector("#restart").focus();
       }
 
-      function loadReflection() {
-        try {
-          const saved = JSON.parse(localStorage.getItem("manifestjagd-reflection") || "[]");
-          if (Array.isArray(saved)) {
-            reflectionFields.forEach((field, index) => {
-              field.value = typeof saved[index] === "string" ? saved[index] : "";
-            });
-          }
-        } catch (error) {
-          console.warn("Gespeicherte Gedanken konnten nicht geladen werden.", error);
-          reflectionStatus.textContent = "Gespeicherte Gedanken konnten nicht geladen werden.";
+      function completeGame() {
+        if (resultSaved) return;
+        updateReflectionState();
+        if (!reflectionFields.every(field => countWords(field.value) >= minimumReflectionWords)) {
+          updateReflectionState();
+          reflectionStatus.textContent = "Bitte beantworte jede Abschlussfrage mit mindestens 30 Wörtern.";
+          return;
         }
-      }
-
-      function saveReflection() {
+        const reflectionAnswers = reflectionFields.map(field => field.value.trim());
         try {
-          localStorage.setItem("manifestjagd-reflection", JSON.stringify(
-            reflectionFields.map(field => field.value)
-          ));
-          reflectionStatus.textContent = "Deine Gedanken sind auf diesem Gerät gespeichert.";
+          saveScore(reflectionAnswers);
+          resultSaved = true;
+          reflectionFields.forEach(field => { field.disabled = true; });
+          saveResultButton.disabled = true;
+          saveResultButton.textContent = "GESPEICHERT";
+          reflectionStatus.textContent = "Name, Punktzahl und Abschlussantworten sind jetzt im Leaderboard.";
+          restartButton.disabled = false;
         } catch (error) {
-          console.warn("Gedanken konnten nicht gespeichert werden.", error);
-          reflectionStatus.textContent = "Speichern nicht möglich — bitte später erneut versuchen.";
+          console.error("Ergebnis konnte nicht vollständig gespeichert werden.", error);
+          reflectionStatus.textContent = "Speichern fehlgeschlagen. Bitte erneut versuchen.";
         }
       }
 
@@ -1119,6 +1204,7 @@
         firstAttemptMade = false;
         responseRecorded = false;
         recordedResponses = [];
+        resultSaved = false;
         score = 0;
         lives = maxLives;
         seconds = 900;
@@ -1146,7 +1232,7 @@
       document.querySelector("#start").addEventListener("click", startGame);
       document.querySelector("#restart").addEventListener("click", prepareNewGame);
       document.querySelector("#continue").addEventListener("click", beginNextLevel);
-      document.querySelector("#save-reflection").addEventListener("click", saveReflection);
+      saveResultButton.addEventListener("click", completeGame);
       playerNameField.addEventListener("input", () => {
         if (playerNameField.value.trim()) {
           nameStatus.textContent = "";
@@ -1160,6 +1246,7 @@
         }
       });
       responseField.addEventListener("input", updateResponseState);
+      reflectionFields.forEach(field => field.addEventListener("input", updateReflectionState));
       fireButton.addEventListener("pointerdown", event => {
         event.preventDefault();
         shoot();
@@ -1176,8 +1263,8 @@
       });
 
       showScores();
-      loadReflection();
       updateHud();
+      updateReflectionState();
       playerNameField.focus();
       const initialBounds = scene.getBoundingClientRect();
       aimPoint = { x: initialBounds.width / 2, y: initialBounds.height / 2 };

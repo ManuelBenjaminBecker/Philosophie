@@ -107,6 +107,14 @@
     .question-tag { color: var(--lime); font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
     .question { max-width: 800px; min-height: 52px; margin: 9px auto 0; font-size: clamp(17px, 2.5vw, 25px); line-height: 1.35; }
     .question-hint { margin-top: 7px; color: var(--muted); font-size: 12px; }
+    .question-response { max-width: 760px; margin: 14px auto 0; text-align: left; }
+    .question-response label { display: flex; justify-content: space-between; gap: 12px; color: var(--ink); font-size: 12px; font-weight: 700; }
+    .word-count { flex: 0 0 auto; color: var(--muted); font-size: 11px; font-weight: 500; }
+    .word-count.ready { color: var(--lime); }
+    .question-response textarea { display: block; width: 100%; min-height: 68px; margin-top: 6px; padding: 9px 11px; resize: vertical; border: 1px solid var(--line); border-radius: 9px; outline: none; color: var(--ink); background: #14211e; font: inherit; font-size: 13px; line-height: 1.45; }
+    .question-response textarea:focus { border-color: var(--lime); }
+    .response-hint, .name-status { min-height: 15px; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .response-hint.invalid, .name-status.invalid { color: var(--coral); }
 
     .scene {
       position: relative;
@@ -252,6 +260,7 @@
     .scores { display: flex; gap: 18px; }
     .score-entry { min-width: 70px; color: var(--muted); font-size: 10px; text-align: right; }
     .score-entry strong { display: block; margin-bottom: 3px; color: var(--ink); font-size: 15px; }
+    .score-entry span { display: block; max-width: 112px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .modal-backdrop {
       position: fixed;
@@ -282,6 +291,9 @@
     .modal strong { color: var(--ink); }
     .primary-button { min-height: 48px; margin-top: 23px; padding: 0 22px; border: 0; border-radius: 11px; color: #162019; background: var(--lime); font-size: 12px; font-weight: 900; letter-spacing: .1em; cursor: pointer; }
     .primary-button:hover { background: #e1ff9b; }
+    .name-label { display: block; margin-top: 19px; color: var(--ink); font-size: 12px; font-weight: 800; text-align: left; }
+    .name-input { width: 100%; height: 44px; margin-top: 7px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; outline: none; color: var(--ink); background: #14211e; font: inherit; font-size: 14px; }
+    .name-input:focus { border-color: var(--lime); }
     .reflection { margin-top: 24px; padding-top: 19px; border-top: 1px solid var(--line); text-align: left; }
     .reflection h2 { margin: 0 0 5px; font-size: 18px; }
     .reflection-intro { margin-bottom: 15px !important; font-size: 12px !important; }
@@ -314,6 +326,8 @@
       .round-note { font-size: 8px; }
       .question-panel { padding: 15px 14px; }
       .question { min-height: 64px; }
+      .question-response { margin-top: 10px; }
+      .question-response textarea { min-height: 74px; }
       .scene { min-height: clamp(365px, 68vh, 520px); }
       .ghost { width: 112px; min-height: 104px; }
       .ghost-label { font-size: 10px; }
@@ -323,8 +337,9 @@
       .scoreboard { align-items: flex-start; padding: 13px 12px; }
       .scoreboard-note { max-width: 120px; line-height: 1.4; }
       .scores { gap: 9px; }
-      .score-entry { min-width: 42px; font-size: 9px; }
+      .score-entry { min-width: 54px; font-size: 9px; }
       .score-entry strong { font-size: 13px; }
+      .score-entry span { max-width: 82px; }
       .modal { padding: 27px 22px; }
     }
 
@@ -358,14 +373,22 @@
       </div>
       <div class="hud-right">
         <div class="hud-label">Zeit · Leben</div>
-        <div class="hud-value"><span id="time">300</span><span class="hearts" id="hearts"> ♥5</span></div>
+        <div class="hud-value"><span id="time">900</span><span class="hearts" id="hearts"> ♥5</span></div>
       </div>
     </section>
 
     <section class="question-panel" aria-live="polite">
       <div class="question-tag" id="question-tag">Aufwärmrunde · Das Manifest</div>
       <div class="question" id="question">Die Geister sind unterwegs …</div>
-      <div class="question-hint" id="question-hint">Finde die richtige Antwort und triff den Geist, der sie trägt.</div>
+      <div class="question-hint" id="question-hint">Lies die Frage und verfasse zuerst deine eigene Antwort.</div>
+      <div class="question-response">
+        <label for="question-response">
+          <span>Deine Antwort in eigenen Worten</span>
+          <span class="word-count" id="word-count">0 / 30 Wörter</span>
+        </label>
+        <textarea id="question-response" rows="2" maxlength="3000" aria-describedby="response-hint" autocomplete="off"></textarea>
+        <div class="response-hint" id="response-hint" aria-live="polite">Zum Schießen musst du mindestens 30 Wörter eingeben.</div>
+      </div>
     </section>
 
     <section class="scene" id="scene" aria-label="Spielszene: bewege den Zeiger zum Geist und schieße">
@@ -399,9 +422,12 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-eyebrow">Das Gespenst geht um in Europa</div>
       <h1 id="modal-title">Manifest<br>Jagd</h1>
-      <p>Marx und Engels haben die Geister geweckt. Triff in Level 1 und 2 jeweils mindestens <strong>8 von 10 Antworten im ersten Versuch</strong>, um weiterzuziehen. In Level 3 warten wirklich schwere Fragen und rasende Geister!</p>
+      <p>Marx und Engels haben die Geister geweckt. Gib zuerst deinen Namen ein und verfasse <strong>bei jeder Frage mindestens 30 Wörter</strong>, bevor du schießt. Für Level 2 und 3 brauchst du jeweils 8 von 10 richtige Ersttreffer.</p>
+      <label class="name-label" for="player-name">Dein Name</label>
+      <input class="name-input" id="player-name" type="text" maxlength="40" autocomplete="name" placeholder="Name eingeben" required>
+      <div class="name-status" id="name-status" aria-live="polite"></div>
       <button class="primary-button" id="start" type="button">JAGD BEGINNEN</button>
-      <p class="manifest-note">Maus / Touch zum Zielen · Leertaste zum Schießen<br>Am Handy: FEUER-Taste · Falsche Antworten kosten ein Leben</p>
+      <p class="manifest-note">Maus / Touch zum Zielen · Leertaste zum Schießen<br>Am Handy: FEUER-Taste · Name und Antworten werden nur auf diesem Gerät gespeichert.</p>
     </section>
   </div>
 
@@ -642,6 +668,11 @@
       const progressEl = document.querySelector("#progress");
       const feedbackEl = document.querySelector("#feedback");
       const questionHintEl = document.querySelector("#question-hint");
+      const responseField = document.querySelector("#question-response");
+      const wordCountEl = document.querySelector("#word-count");
+      const responseHintEl = document.querySelector("#response-hint");
+      const playerNameField = document.querySelector("#player-name");
+      const nameStatus = document.querySelector("#name-status");
       const startModal = document.querySelector("#start-modal");
       const endModal = document.querySelector("#end-modal");
       const levelModal = document.querySelector("#level-modal");
@@ -656,6 +687,7 @@
       const reflectionFields = ["#reflection-today", "#reflection-think", "#reflection-takeaway"]
         .map(selector => document.querySelector(selector));
       const questionSets = [questions, mediumQuestions, hardQuestions];
+      const minimumResponseWords = 30;
       const levelDetails = [
         { name: "Level 1", difficulty: "Leicht", speed: 0.65 },
         { name: "Level 2", difficulty: "Mittelschwer", speed: 2.2 },
@@ -666,15 +698,19 @@
       let round = 0;
       let firstTryCorrect = 0;
       let firstAttemptMade = false;
+      let responseRecorded = false;
+      let playerName = "";
+      let recordedResponses = [];
       let activeQuestions = questions.slice();
       let score = 0;
       let lives = maxLives;
-      let seconds = 300;
+      let seconds = 900;
       let started = false;
       let locked = false;
       let levelTransitionPending = false;
       let levelTransitionTimer = null;
       let timer = null;
+      let timeExpired = false;
       let ghosts = [];
       let aimPoint = { x: 0, y: 0 };
 
@@ -688,6 +724,35 @@
           const swap = Math.floor(Math.random() * (index + 1));
           [activeQuestions[index], activeQuestions[swap]] = [activeQuestions[swap], activeQuestions[index]];
         }
+      }
+
+      function countWords(text) {
+        return text.match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu)?.length || 0;
+      }
+
+      function updateResponseState() {
+        const count = countWords(responseField.value);
+        const ready = count >= minimumResponseWords;
+        wordCountEl.textContent = `${count} / ${minimumResponseWords} Wörter`;
+        wordCountEl.classList.toggle("ready", ready);
+        responseHintEl.classList.toggle("invalid", !ready);
+        responseHintEl.textContent = ready
+          ? "Antwort vollständig — du kannst jetzt schießen."
+          : `Noch ${minimumResponseWords - count} ${minimumResponseWords - count === 1 ? "Wort" : "Wörter"} bis zum Schuss.`;
+        if (ready && timeExpired && started) finish(false, "time");
+      }
+
+      function recordCurrentResponse() {
+        if (responseRecorded || countWords(responseField.value) < minimumResponseWords) return false;
+        const current = currentQuestions()[round];
+        if (!current) return false;
+        recordedResponses.push({
+          level: levelDetails[level].name,
+          question: current.question,
+          answer: responseField.value.trim()
+        });
+        responseRecorded = true;
+        return true;
       }
 
       function placeAim(clientX, clientY) {
@@ -723,9 +788,15 @@
           entry.className = "score-entry";
           const value = Number(entries[index]?.score) || 0;
           const date = entries[index]?.date || "—";
+          const name = typeof entries[index]?.name === "string" && entries[index].name.trim()
+            ? entries[index].name.trim()
+            : "Unbekannt";
           const valueElement = document.createElement("strong");
           valueElement.textContent = String(value).padStart(4, "0");
-          entry.append(valueElement, document.createTextNode(String(date)));
+          const detail = document.createElement("span");
+          detail.textContent = `${name} · ${date}`;
+          entry.title = `${name} · ${date}`;
+          entry.append(valueElement, detail);
           scores.append(entry);
         }
       }
@@ -735,11 +806,25 @@
         try {
           entries = JSON.parse(localStorage.getItem("manifestjagd-scores") || "[]");
           if (!Array.isArray(entries)) entries = [];
-          entries.push({ score, date: new Date().toLocaleDateString("de-DE") });
+          const date = new Date().toLocaleDateString("de-DE");
+          entries.push({ score, name: playerName, date });
           entries.sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
           localStorage.setItem("manifestjagd-scores", JSON.stringify(entries.slice(0, 3)));
         } catch (error) {
           console.warn("Highscore konnte nicht gespeichert werden.", error);
+        }
+        try {
+          const results = JSON.parse(localStorage.getItem("manifestjagd-results") || "[]");
+          const history = Array.isArray(results) ? results : [];
+          history.push({
+            name: playerName,
+            score,
+            date: new Date().toISOString(),
+            responses: recordedResponses
+          });
+          localStorage.setItem("manifestjagd-results", JSON.stringify(history.slice(-10)));
+        } catch (error) {
+          console.warn("Frageantworten konnten nicht gespeichert werden.", error);
         }
         showScores();
       }
@@ -823,6 +908,15 @@
 
       function shoot() {
         if (!started || locked) return;
+        if (countWords(responseField.value) < minimumResponseWords) {
+          updateResponseState();
+          responseHintEl.textContent = `Erst mindestens ${minimumResponseWords} Wörter eingeben, dann kannst du schießen.`;
+          responseHintEl.classList.add("invalid");
+          feedbackEl.textContent = "Schreibe zuerst mindestens 30 Wörter zu dieser Frage.";
+          responseField.focus();
+          return;
+        }
+        if (timeExpired) return;
         const shot = document.createElement("span");
         shot.className = "shot";
         shot.style.left = `${aimPoint.x}px`;
@@ -854,6 +948,7 @@
           if (lives <= 0) finish(false, "lives");
           return;
         }
+        if (!recordCurrentResponse()) return;
         if (!firstAttemptMade) firstTryCorrect += 1;
         firstAttemptMade = true;
         locked = true;
@@ -885,6 +980,8 @@
 
       function presentQuestion() {
         const current = currentQuestions()[round];
+        responseRecorded = false;
+        responseField.value = "";
         tagEl.textContent = current.level;
         questionEl.textContent = current.question;
         questionHintEl.textContent = level < 2
@@ -894,6 +991,7 @@
           ? "Falscher Erstversuch — finde jetzt die richtige Antwort."
           : "Triff die richtige Antwort!";
         updateHud();
+        updateResponseState();
         spawnGhosts();
       }
 
@@ -902,7 +1000,19 @@
         timer = window.setInterval(() => {
           seconds -= 1;
           updateHud();
-          if (seconds <= 0) finish(false, "time");
+          if (seconds <= 0) {
+            seconds = 0;
+            timeExpired = true;
+            window.clearInterval(timer);
+            if (countWords(responseField.value) >= minimumResponseWords) {
+              finish(false, "time");
+            } else {
+              locked = true;
+              responseHintEl.textContent = "Die Zeit ist um. Ergänze mindestens 30 Wörter, um deine Jagd abzuschließen.";
+              responseHintEl.classList.add("invalid");
+              feedbackEl.textContent = "Zeit abgelaufen — vervollständige zuerst deine Antwort.";
+            }
+          }
         }, 1000);
       }
 
@@ -943,6 +1053,7 @@
 
       function finish(won, reason = "") {
         if (!started) return;
+        recordCurrentResponse();
         started = false;
         window.clearInterval(timer);
         clearGhosts();
@@ -989,6 +1100,16 @@
       }
 
       function startGame() {
+        const enteredName = playerNameField.value.trim();
+        if (!enteredName) {
+          nameStatus.textContent = "Bitte gib vor dem Spiel deinen Namen ein.";
+          nameStatus.classList.add("invalid");
+          playerNameField.focus();
+          return;
+        }
+        playerName = enteredName;
+        nameStatus.textContent = "";
+        nameStatus.classList.remove("invalid");
         window.clearTimeout(levelTransitionTimer);
         levelTransitionPending = false;
         round = 0;
@@ -996,9 +1117,12 @@
         shuffleQuestions();
         firstTryCorrect = 0;
         firstAttemptMade = false;
+        responseRecorded = false;
+        recordedResponses = [];
         score = 0;
         lives = maxLives;
-        seconds = 300;
+        seconds = 900;
+        timeExpired = false;
         started = true;
         locked = false;
         startModal.classList.add("hidden");
@@ -1010,16 +1134,42 @@
         scene.focus?.();
       }
 
+      function prepareNewGame() {
+        endModal.classList.add("hidden");
+        startModal.classList.remove("hidden");
+        playerNameField.value = "";
+        nameStatus.textContent = "";
+        nameStatus.classList.remove("invalid");
+        playerNameField.focus();
+      }
+
       document.querySelector("#start").addEventListener("click", startGame);
-      document.querySelector("#restart").addEventListener("click", startGame);
+      document.querySelector("#restart").addEventListener("click", prepareNewGame);
       document.querySelector("#continue").addEventListener("click", beginNextLevel);
       document.querySelector("#save-reflection").addEventListener("click", saveReflection);
+      playerNameField.addEventListener("input", () => {
+        if (playerNameField.value.trim()) {
+          nameStatus.textContent = "";
+          nameStatus.classList.remove("invalid");
+        }
+      });
+      playerNameField.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          startGame();
+        }
+      });
+      responseField.addEventListener("input", updateResponseState);
       fireButton.addEventListener("pointerdown", event => {
         event.preventDefault();
         shoot();
       });
       document.addEventListener("keydown", event => {
-        if (event.code === "Space" && !event.repeat) {
+        const target = event.target;
+        const editingText = target && (
+          target.isContentEditable || target.tagName === "INPUT" || target.tagName === "TEXTAREA"
+        );
+        if (event.code === "Space" && !event.repeat && !editingText) {
           event.preventDefault();
           shoot();
         }
@@ -1028,6 +1178,7 @@
       showScores();
       loadReflection();
       updateHud();
+      playerNameField.focus();
       const initialBounds = scene.getBoundingClientRect();
       aimPoint = { x: initialBounds.width / 2, y: initialBounds.height / 2 };
       aim.style.left = `${aimPoint.x}px`;

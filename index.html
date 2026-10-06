@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111b19">
+  <title>Manifestjagd – Das Gespenst geht um</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f5f0df;
+      --muted: #a6b3a7;
+      --night: #111b19;
+      --panel: #1b2925;
+      --lime: #d2fa73;
+      --coral: #ff856a;
+      --line: rgba(236, 243, 217, .14);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 50% -20%, rgba(103, 132, 104, .2), transparent 60%),
+        var(--night);
+    }
+
+    button { font: inherit; }
+
+    .game-shell {
+      width: min(100% - 32px, 1120px);
+      margin: 0 auto;
+      padding: 22px 0 34px;
+    }
+
+    .topbar, .brand, .status, .scoreboard, .scoreboard-heading, .hud-row {
+      display: flex;
+      align-items: center;
+    }
+
+    .topbar {
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .brand { gap: 12px; }
+
+    .brand-mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border: 1px solid rgba(210, 250, 115, .4);
+      border-radius: 13px;
+      color: var(--lime);
+      font-size: 22px;
+      transform: rotate(-7deg);
+    }
+
+    .brand-name {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .brand-subtitle { margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .status { gap: 16px; color: var(--muted); font-size: 12px; }
+    .status span:first-child::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+
+    .hud {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: center;
+      padding: 17px 20px;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      border-radius: 17px 17px 0 0;
+      background: rgba(27, 41, 37, .92);
+    }
+
+    .hud-label { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    .hud-value { margin-top: 4px; font-size: 20px; font-weight: 800; }
+    .hud-center { text-align: center; }
+    .hud-right { text-align: right; }
+    .hearts { color: var(--coral); letter-spacing: .12em; }
+    .progress-track { height: 4px; margin-top: 9px; overflow: hidden; border-radius: 5px; background: rgba(255,255,255,.1); }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: var(--lime); transition: width .35s ease; }
+
+    .question-panel {
+      position: relative;
+      z-index: 2;
+      padding: 18px 24px 20px;
+      border: 1px solid var(--line);
+      background: #202f2a;
+      text-align: center;
+    }
+
+    .question-tag { color: var(--lime); font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    .question { max-width: 800px; min-height: 52px; margin: 9px auto 0; font-size: clamp(17px, 2.5vw, 25px); line-height: 1.35; }
+    .question-hint { margin-top: 7px; color: var(--muted); font-size: 12px; }
+
+    .scene {
+      position: relative;
+      min-height: 410px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-top: 0;
+      border-radius: 0 0 17px 17px;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 77% 22%, rgba(238, 237, 192, .11) 0 2px, transparent 3px),
+        radial-gradient(circle at 77% 22%, rgba(238, 237, 192, .12) 0 33px, transparent 34px),
+        radial-gradient(ellipse at 50% 100%, rgba(84, 117, 76, .45), transparent 54%),
+        linear-gradient(180deg, #182827 0%, #253b35 56%, #324a3c 100%);
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .stars {
+      position: absolute;
+      inset: 0;
+      opacity: .7;
+      background-image:
+        radial-gradient(1px 1px at 10% 19%, #e6edcf 99%, transparent),
+        radial-gradient(1px 1px at 33% 12%, #e6edcf 99%, transparent),
+        radial-gradient(1.5px 1.5px at 57% 24%, #e6edcf 99%, transparent),
+        radial-gradient(1px 1px at 90% 37%, #e6edcf 99%, transparent),
+        radial-gradient(1px 1px at 45% 34%, #e6edcf 99%, transparent),
+        radial-gradient(1px 1px at 21% 41%, #e6edcf 99%, transparent);
+    }
+
+    .far-hills, .near-hills {
+      position: absolute;
+      right: -5%;
+      bottom: 0;
+      left: -5%;
+      height: 38%;
+      border-radius: 50% 50% 0 0 / 22% 22% 0 0;
+      background: #243b32;
+      transform: rotate(-3deg) translateY(22%);
+    }
+
+    .near-hills { height: 28%; background: #1b302a; transform: rotate(3deg) translateY(27%); }
+    .euro-route { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .14; pointer-events: none; }
+    .euro-route path { fill: none; stroke: #e6edcf; stroke-dasharray: 4 9; stroke-width: 1.5; }
+    .scene-caption { position: absolute; bottom: 16px; left: 18px; z-index: 2; color: rgba(232, 239, 218, .6); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; pointer-events: none; }
+    .aim {
+      position: absolute;
+      z-index: 9;
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--lime);
+      border-radius: 50%;
+      box-shadow: 0 0 13px rgba(210, 250, 115, .55);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .aim::before, .aim::after { position: absolute; top: 50%; left: 50%; content: ""; background: var(--lime); transform: translate(-50%, -50%); }
+    .aim::before { width: 42px; height: 1px; }
+    .aim::after { width: 1px; height: 42px; }
+    .aim-dot { position: absolute; top: 50%; left: 50%; width: 3px; height: 3px; border-radius: 50%; background: var(--lime); transform: translate(-50%, -50%); }
+
+    .ghost {
+      position: absolute;
+      z-index: 4;
+      display: grid;
+      width: clamp(104px, 15vw, 146px);
+      min-height: 116px;
+      padding: 0 7px 10px;
+      align-content: center;
+      justify-items: center;
+      border: 0;
+      color: #f8f5e9;
+      background: transparent;
+      cursor: crosshair;
+      text-align: center;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 7px 10px rgba(4, 15, 12, .32));
+      animation: drift 2.6s ease-in-out infinite;
+    }
+
+    .ghost-body {
+      position: relative;
+      display: grid;
+      width: 51px;
+      height: 57px;
+      margin-bottom: -2px;
+      place-items: center;
+      border-radius: 48% 48% 12% 12%;
+      background: #f3f0df;
+      box-shadow: inset -7px -2px 0 rgba(195, 209, 188, .45), 0 0 20px rgba(221, 245, 215, .18);
+    }
+
+    .ghost-body::after {
+      position: absolute;
+      right: -1px;
+      bottom: -8px;
+      left: -1px;
+      height: 16px;
+      content: "";
+      background: radial-gradient(10px 9px at 10px 0, transparent 9px, #f3f0df 10px) 0 0 / 20px 16px repeat-x;
+    }
+
+    .ghost-eyes { display: flex; gap: 9px; margin-top: -8px; }
+    .ghost-eyes i { width: 5px; height: 8px; border-radius: 50%; background: #263a34; }
+
+    .ghost-label {
+      z-index: 1;
+      max-width: 100%;
+      padding: 6px 9px;
+      border: 1px solid rgba(237, 242, 223, .32);
+      border-radius: 8px;
+      background: rgba(16, 28, 25, .85);
+      font-size: clamp(10px, 1.3vw, 12px);
+      font-weight: 700;
+      line-height: 1.25;
+      text-wrap: balance;
+    }
+
+    .ghost.hit { animation: pop .28s ease-out forwards; pointer-events: none; }
+    .ghost.wrong .ghost-body { background: #ffc2a9; }
+    .ghost.wrong .ghost-body::after { background: radial-gradient(10px 9px at 10px 0, transparent 9px, #ffc2a9 10px) 0 0 / 20px 16px repeat-x; }
+    .ghost.correct .ghost-body { box-shadow: 0 0 24px rgba(210, 250, 115, .7); }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      padding: 13px 2px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .keycap { display: inline-grid; min-width: 29px; height: 26px; margin: 0 4px; padding: 0 7px; place-items: center; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; color: var(--ink); font-size: 11px; }
+    .fire-button { display: none; min-width: 100px; height: 44px; border: 1px solid rgba(210, 250, 115, .6); border-radius: 12px; color: var(--night); background: var(--lime); font-size: 12px; font-weight: 900; letter-spacing: .12em; }
+    .fire-button:active { transform: scale(.96); }
+
+    .scoreboard { justify-content: space-between; gap: 16px; margin-top: 22px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; background: rgba(27, 41, 37, .66); }
+    .scoreboard-heading { gap: 10px; font-size: 13px; font-weight: 800; }
+    .trophy { color: var(--lime); font-size: 18px; }
+    .scoreboard-note { color: var(--muted); font-size: 11px; }
+    .scores { display: flex; gap: 18px; }
+    .score-entry { min-width: 70px; color: var(--muted); font-size: 10px; text-align: right; }
+    .score-entry strong { display: block; margin-bottom: 3px; color: var(--ink); font-size: 15px; }
+
+    .modal-backdrop {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      display: grid;
+      padding: 20px;
+      place-items: center;
+      background: rgba(8, 14, 13, .76);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal {
+      width: min(100%, 450px);
+      padding: 32px;
+      border: 1px solid rgba(236, 243, 217, .2);
+      border-radius: 20px;
+      background: #1b2925;
+      box-shadow: 0 24px 80px rgba(0,0,0,.38);
+      text-align: center;
+    }
+
+    .modal-eyebrow { color: var(--lime); font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+    .modal h1 { margin: 12px 0 10px; font-size: clamp(29px, 7vw, 43px); line-height: 1; }
+    .modal p { margin: 0 auto; color: #bac5b6; font-size: 14px; line-height: 1.65; }
+    .modal strong { color: var(--ink); }
+    .primary-button { min-height: 48px; margin-top: 23px; padding: 0 22px; border: 0; border-radius: 11px; color: #162019; background: var(--lime); font-size: 12px; font-weight: 900; letter-spacing: .1em; cursor: pointer; }
+    .primary-button:hover { background: #e1ff9b; }
+    .manifest-note { margin-top: 18px !important; color: #829186 !important; font-size: 11px !important; }
+    .hidden { display: none !important; }
+    .flash { position: absolute; z-index: 8; inset: 0; background: rgba(255, 133, 106, .22); animation: flash .2s ease-out forwards; pointer-events: none; }
+    .shot { position: absolute; z-index: 7; width: 10px; height: 10px; border: 2px solid var(--lime); border-radius: 50%; box-shadow: 0 0 14px var(--lime); transform: translate(-50%, -50%); animation: shot .25s ease-out forwards; pointer-events: none; }
+
+    @keyframes drift { 0%,100% { margin-top: 0; } 50% { margin-top: -9px; } }
+    @keyframes pop { to { opacity: 0; transform: translate(-50%, -50%) scale(1.5) rotate(8deg); } }
+    @keyframes flash { to { opacity: 0; } }
+    @keyframes shot { to { opacity: 0; transform: translate(-50%, -50%) scale(4); } }
+
+    @media (max-width: 650px) {
+      .game-shell { width: min(100% - 20px, 520px); padding-top: 13px; }
+      .topbar { margin-bottom: 12px; }
+      .brand-mark { width: 36px; height: 36px; }
+      .brand-name { font-size: 11px; }
+      .brand-subtitle { font-size: 10px; }
+      .status { display: none; }
+      .hud { gap: 8px; padding: 13px 12px; }
+      .hud-label { font-size: 8px; letter-spacing: .1em; }
+      .hud-value { font-size: 17px; }
+      .question-panel { padding: 15px 14px; }
+      .question { min-height: 64px; }
+      .scene { min-height: clamp(365px, 68vh, 520px); }
+      .ghost { width: 112px; min-height: 104px; }
+      .ghost-label { font-size: 10px; }
+      .controls { align-items: center; font-size: 10px; }
+      .keyboard-hint { max-width: 205px; line-height: 1.6; }
+      .fire-button { display: block; flex: 0 0 auto; }
+      .scoreboard { align-items: flex-start; padding: 13px 12px; }
+      .scoreboard-note { max-width: 120px; line-height: 1.4; }
+      .scores { gap: 9px; }
+      .score-entry { min-width: 42px; font-size: 9px; }
+      .score-entry strong { font-size: 13px; }
+      .modal { padding: 27px 22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✳</div>
+        <div>
+          <div class="brand-name">Manifestjagd</div>
+          <div class="brand-subtitle">Eine Geisterjagd durch Europa</div>
+        </div>
+      </div>
+      <div class="status"><span>Einzelspieler</span><span>Wissen ist deine Munition</span></div>
+    </header>
+
+    <section class="hud" aria-label="Spielstand">
+      <div>
+        <div class="hud-label">Punkte</div>
+        <div class="hud-value" id="score">0000</div>
+      </div>
+      <div class="hud-center">
+        <div class="hud-label">Frage <span id="round">1</span> / <span id="total-rounds">10</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-label">Zeit · Leben</div>
+        <div class="hud-value"><span id="time">60</span><span class="hearts" id="hearts"> ♥♥♥</span></div>
+      </div>
+    </section>
+
+    <section class="question-panel" aria-live="polite">
+      <div class="question-tag" id="question-tag">Aufwärmrunde · Das Manifest</div>
+      <div class="question" id="question">Die Geister sind unterwegs …</div>
+      <div class="question-hint">Finde die richtige Antwort und triff den Geist, der sie trägt.</div>
+    </section>
+
+    <section class="scene" id="scene" aria-label="Spielszene: bewege den Zeiger zum Geist und schieße">
+      <div class="stars"></div>
+      <svg class="euro-route" viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M90 285 C210 70 315 370 450 185 S680 60 735 235 875 335 930 100"/>
+        <path d="M150 120 C280 230 350 55 525 120 S760 340 850 175"/>
+      </svg>
+      <div class="far-hills"></div>
+      <div class="near-hills"></div>
+      <div class="scene-caption">Europa · irgendwo zieht ein Gespenst umher</div>
+      <div class="aim" id="aim" aria-hidden="true"><span class="aim-dot"></span></div>
+    </section>
+
+    <div class="controls">
+      <div class="keyboard-hint">Zielen: <strong>Maus / Touch</strong> <span class="keycap">LEERTASTE</span> Wissen werfen</div>
+      <button class="fire-button" id="fire" type="button" aria-label="Wissen werfen">FEUER ✳</button>
+      <div id="feedback" aria-live="polite">Triff die richtige Antwort!</div>
+    </div>
+
+    <section class="scoreboard" aria-label="Highscoretabelle">
+      <div>
+        <div class="scoreboard-heading"><span class="trophy">♜</span> Hall of Fame</div>
+        <div class="scoreboard-note">Deine besten Jagden auf diesem Gerät</div>
+      </div>
+      <div class="scores" id="scores"></div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="start-modal">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-eyebrow">Das Gespenst geht um in Europa</div>
+      <h1 id="modal-title">Manifest<br>Jagd</h1>
+      <p>Marx und Engels haben die Geister geweckt. Lies die Fragen, ziele auf den Geist mit der <strong>richtigen Antwort</strong> und wirf dein Wissen!</p>
+      <button class="primary-button" id="start" type="button">JAGD BEGINNEN</button>
+      <p class="manifest-note">Maus / Touch zum Zielen · Leertaste zum Schießen<br>Am Handy: FEUER-Taste · Falsche Treffer kosten ein Leben</p>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="end-modal">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="end-title">
+      <div class="modal-eyebrow" id="end-eyebrow">Die Jagd ist vorbei</div>
+      <h1 id="end-title">Gut gejagt!</h1>
+      <p id="end-copy"></p>
+      <button class="primary-button" id="restart" type="button">NOCH EINE RUNDE</button>
+      <p class="manifest-note">Deine besten Ergebnisse stehen in der Hall of Fame.</p>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      const questions = [
+        {
+          level: "Aufwärmrunde · Das Manifest",
+          question: "Mit welchem berühmten Bild beginnt das Manifest der Kommunistischen Partei?",
+          answers: ["Ein Gespenst geht um in Europa", "Ein Sturm zieht über London", "Ein Adler kreist über Paris"],
+          correct: 0
+        },
+        {
+          level: "Runde 2 · Klassen",
+          question: "Welche Gruppen stehen laut Manifest im Zentrum der modernen Klassengegensätze?",
+          answers: ["Adel und Klerus", "Bourgeoisie und Proletariat", "Bauern und Handwerker"],
+          correct: 1
+        },
+        {
+          level: "Runde 3 · Begriffe",
+          question: "Wer gehört im Manifest zur Bourgeoisie?",
+          answers: ["Die Klasse der modernen Kapitalisten, die Produktionsmittel besitzen", "Alle Menschen, die in einer Stadt leben", "Die Klasse der Lohnarbeitenden ohne Produktionsmittel"],
+          correct: 0
+        },
+        {
+          level: "Runde 4 · Arbeit",
+          question: "Was müssen Proletarier laut Manifest verkaufen, um ihren Lebensunterhalt zu bestreiten?",
+          answers: ["Ihre politische Stimme", "Ihre Arbeitskraft", "Ihre Werkzeuge an den Adel"],
+          correct: 1
+        },
+        {
+          level: "Runde 5 · Geschichte",
+          question: "Wie beschreiben Marx und Engels die Geschichte aller bisherigen Gesellschaft?",
+          answers: ["Als fortlaufenden technischen Fortschritt", "Als Geschichte von Klassenkämpfen", "Als Abfolge großer Erfindungen"],
+          correct: 1
+        },
+        {
+          level: "Runde 6 · Organisation",
+          question: "Was unterscheidet die Kommunisten laut Manifest von den übrigen proletarischen Parteien?",
+          answers: ["Sie verfolgen keine vom Proletariat getrennten Interessen", "Sie vertreten ausschließlich die Interessen eines Landes", "Sie wollen die bestehende Klassenordnung erhalten"],
+          correct: 0
+        },
+        {
+          level: "Runde 7 · Politische Ziele",
+          question: "Welches unmittelbare Ziel teilen Kommunisten laut Manifest mit den übrigen proletarischen Parteien?",
+          answers: ["Die Rückkehr zur Zunftwirtschaft", "Bildung des Proletariats zur Klasse und Eroberung der politischen Macht", "Die Stärkung der Monarchie"],
+          correct: 1
+        },
+        {
+          level: "Runde 8 · Eigentum",
+          question: "Welche Art von Eigentum stellen Marx und Engels im Abschnitt über die Kommunistenfrage infrage?",
+          answers: ["Jede persönliche Aneignung von Gebrauchsgegenständen", "Das bürgerliche Privateigentum an Produktionsmitteln", "Das Eigentum kleiner Handwerker an ihrem Werkzeug"],
+          correct: 1
+        },
+        {
+          level: "Runde 9 · Internationale Perspektive",
+          question: "Was bedeutet der Satz „Die Arbeiter haben kein Vaterland“ im Argument des Manifests am ehesten?",
+          answers: ["Arbeiter sollen keine Sprachen oder Kulturen haben", "Das Proletariat besitzt im bestehenden Staat keine politische Heimat im bürgerlichen Sinn", "Arbeiter dürfen nicht über Grenzen reisen"],
+          correct: 1
+        },
+        {
+          level: "Finale · Der Schlusssatz",
+          question: "Wie lautet die berühmte Schlussforderung des Manifests?",
+          answers: ["Proletarier aller Länder, vereinigt euch!", "Arbeiter aller Städte, geht nach Hause!", "Bürger aller Länder, verteidigt das Eigentum!"],
+          correct: 0
+        }
+      ];
+
+      const scene = document.querySelector("#scene");
+      const aim = document.querySelector("#aim");
+      const questionEl = document.querySelector("#question");
+      const tagEl = document.querySelector("#question-tag");
+      const scoreEl = document.querySelector("#score");
+      const timeEl = document.querySelector("#time");
+      const heartsEl = document.querySelector("#hearts");
+      const roundEl = document.querySelector("#round");
+      const progressEl = document.querySelector("#progress");
+      const feedbackEl = document.querySelector("#feedback");
+      const startModal = document.querySelector("#start-modal");
+      const endModal = document.querySelector("#end-modal");
+      const endTitle = document.querySelector("#end-title");
+      const endEyebrow = document.querySelector("#end-eyebrow");
+      const endCopy = document.querySelector("#end-copy");
+      const fireButton = document.querySelector("#fire");
+      let round = 0;
+      let score = 0;
+      let lives = 3;
+      let seconds = 60;
+      let started = false;
+      let locked = false;
+      let timer = null;
+      let ghosts = [];
+      let aimPoint = { x: 0, y: 0 };
+
+      document.querySelector("#total-rounds").textContent = questions.length;
+
+      function placeAim(clientX, clientY) {
+        const bounds = scene.getBoundingClientRect();
+        aimPoint = {
+          x: Math.max(0, Math.min(bounds.width, clientX - bounds.left)),
+          y: Math.max(0, Math.min(bounds.height, clientY - bounds.top))
+        };
+        aim.style.left = `${aimPoint.x}px`;
+        aim.style.top = `${aimPoint.y}px`;
+      }
+
+      scene.addEventListener("pointermove", event => placeAim(event.clientX, event.clientY));
+      scene.addEventListener("pointerdown", event => {
+        if (event.pointerType === "touch") {
+          placeAim(event.clientX, event.clientY);
+          event.preventDefault();
+        }
+      });
+
+      function showScores() {
+        let entries = [];
+        try {
+          entries = JSON.parse(localStorage.getItem("manifestjagd-scores") || "[]");
+          if (!Array.isArray(entries)) entries = [];
+        } catch (error) {
+          console.warn("Highscores konnten nicht gelesen werden.", error);
+        }
+        const scores = document.querySelector("#scores");
+        scores.replaceChildren();
+        for (let index = 0; index < 3; index += 1) {
+          const entry = document.createElement("div");
+          entry.className = "score-entry";
+          const value = Number(entries[index]?.score) || 0;
+          const date = entries[index]?.date || "—";
+          const valueElement = document.createElement("strong");
+          valueElement.textContent = String(value).padStart(4, "0");
+          entry.append(valueElement, document.createTextNode(String(date)));
+          scores.append(entry);
+        }
+      }
+
+      function saveScore() {
+        let entries = [];
+        try {
+          entries = JSON.parse(localStorage.getItem("manifestjagd-scores") || "[]");
+          if (!Array.isArray(entries)) entries = [];
+          entries.push({ score, date: new Date().toLocaleDateString("de-DE") });
+          entries.sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+          localStorage.setItem("manifestjagd-scores", JSON.stringify(entries.slice(0, 3)));
+        } catch (error) {
+          console.warn("Highscore konnte nicht gespeichert werden.", error);
+        }
+        showScores();
+      }
+
+      function updateHud() {
+        scoreEl.textContent = String(score).padStart(4, "0");
+        timeEl.textContent = seconds;
+        heartsEl.textContent = ` ${"♥".repeat(lives)}${"♡".repeat(3 - lives)}`;
+        roundEl.textContent = Math.min(round + 1, questions.length);
+        progressEl.style.width = `${(round / questions.length) * 100}%`;
+      }
+
+      function clearGhosts() {
+        ghosts.forEach(ghost => ghost.element.remove());
+        ghosts = [];
+      }
+
+      function spawnGhosts() {
+        clearGhosts();
+        const current = questions[round];
+        const positions = [
+          { x: 18, y: 38 }, { x: 50, y: 59 }, { x: 82, y: 36 }
+        ];
+        const correctIndex = current.correct;
+        const shuffledAnswers = current.answers.map((text, index) => ({ text, correct: index === correctIndex }));
+        for (let index = shuffledAnswers.length - 1; index > 0; index -= 1) {
+          const swap = Math.floor(Math.random() * (index + 1));
+          [shuffledAnswers[index], shuffledAnswers[swap]] = [shuffledAnswers[swap], shuffledAnswers[index]];
+        }
+        shuffledAnswers.forEach((answer, index) => {
+          const element = document.createElement("button");
+          element.type = "button";
+          element.className = `ghost${answer.correct ? " correct" : ""}`;
+          element.setAttribute("aria-label", `Antwort: ${answer.text}`);
+          element.innerHTML = `<span class="ghost-body"><span class="ghost-eyes"><i></i><i></i></span></span><span class="ghost-label"></span>`;
+          element.querySelector(".ghost-label").textContent = answer.text;
+          const pos = positions[index];
+          const drift = (Math.random() * 2 - 1) * 9;
+          const state = {
+            element, correct: answer.correct,
+            x: (pos.x / 100) * scene.clientWidth,
+            y: (pos.y / 100) * scene.clientHeight,
+            vx: (Math.random() < .5 ? -1 : 1) * (0.26 + round * .025),
+            vy: drift * .016
+          };
+          element.style.left = `${pos.x}%`;
+          element.style.top = `${pos.y}%`;
+          element.style.animationDelay = `${Math.random() * -2}s`;
+          scene.append(element);
+          element.addEventListener("click", () => {
+            const rect = element.getBoundingClientRect();
+            placeAim(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            shoot();
+          });
+          ghosts.push(state);
+        });
+      }
+
+      function animate() {
+        if (!started) return;
+        const width = scene.clientWidth;
+        ghosts.forEach(ghost => {
+          if (ghost.element.classList.contains("hit")) return;
+          ghost.x += ghost.vx;
+          ghost.y += ghost.vy;
+          if (ghost.x < 55 || ghost.x > width - 55) ghost.vx *= -1;
+          if (ghost.y < scene.clientHeight * .25 || ghost.y > scene.clientHeight * .68) ghost.vy *= -1;
+          ghost.element.style.left = `${ghost.x}px`;
+          ghost.element.style.top = `${ghost.y}px`;
+        });
+        requestAnimationFrame(animate);
+      }
+
+      function shoot() {
+        if (!started || locked) return;
+        const shot = document.createElement("span");
+        shot.className = "shot";
+        shot.style.left = `${aimPoint.x}px`;
+        shot.style.top = `${aimPoint.y}px`;
+        scene.append(shot);
+        window.setTimeout(() => shot.remove(), 280);
+        const target = ghosts.find(ghost => {
+          const rect = ghost.element.getBoundingClientRect();
+          const sceneRect = scene.getBoundingClientRect();
+          return aimPoint.x >= rect.left - sceneRect.left - 7 &&
+            aimPoint.x <= rect.right - sceneRect.left + 7 &&
+            aimPoint.y >= rect.top - sceneRect.top - 7 &&
+            aimPoint.y <= rect.bottom - sceneRect.top + 7;
+        });
+        if (!target) {
+          feedbackEl.textContent = "Daneben! Ziele genau auf einen Geist.";
+          return;
+        }
+        if (!target.correct) {
+          target.element.classList.add("wrong");
+          lives -= 1;
+          updateHud();
+          feedbackEl.textContent = "Falsche Antwort! Ein Leben verloren.";
+          const flash = document.createElement("div");
+          flash.className = "flash";
+          scene.append(flash);
+          window.setTimeout(() => flash.remove(), 250);
+          if (lives <= 0) finish(false);
+          return;
+        }
+        locked = true;
+        target.element.classList.add("hit");
+        score += 100 + Math.max(0, seconds) * 2;
+        feedbackEl.textContent = "Treffer! Wissen sitzt. +Punkte";
+        updateHud();
+        window.setTimeout(() => {
+          round += 1;
+          if (round >= questions.length) {
+            finish(true);
+            return;
+          }
+          presentQuestion();
+          locked = false;
+        }, 650);
+      }
+
+      function presentQuestion() {
+        const current = questions[round];
+        tagEl.textContent = current.level;
+        questionEl.textContent = current.question;
+        feedbackEl.textContent = "Triff die richtige Antwort!";
+        updateHud();
+        spawnGhosts();
+      }
+
+      function finish(won) {
+        if (!started) return;
+        started = false;
+        window.clearInterval(timer);
+        clearGhosts();
+        saveScore();
+        endEyebrow.textContent = won ? "Alle Geister vertrieben" : "Die Geister ziehen weiter";
+        endTitle.textContent = won ? "Manifest gemeistert!" : "Die Jagd ist vorbei";
+        endCopy.textContent = won
+          ? `Du hast alle ${questions.length} Fragen geknackt und ${score} Punkte gesammelt. Europa ist fürs Erste geisterfrei!`
+          : `Du hast ${round} von ${questions.length} Fragen beantwortet und ${score} Punkte gesammelt. Lies dich schlau und komm wieder!`;
+        endModal.classList.remove("hidden");
+        document.querySelector("#restart").focus();
+      }
+
+      function startGame() {
+        round = 0;
+        score = 0;
+        lives = 3;
+        seconds = 60;
+        started = true;
+        locked = false;
+        startModal.classList.add("hidden");
+        endModal.classList.add("hidden");
+        presentQuestion();
+        animate();
+        window.clearInterval(timer);
+        timer = window.setInterval(() => {
+          seconds -= 1;
+          updateHud();
+          if (seconds <= 0) finish(false);
+        }, 1000);
+        scene.focus?.();
+      }
+
+      document.querySelector("#start").addEventListener("click", startGame);
+      document.querySelector("#restart").addEventListener("click", startGame);
+      fireButton.addEventListener("pointerdown", event => {
+        event.preventDefault();
+        shoot();
+      });
+      document.addEventListener("keydown", event => {
+        if (event.code === "Space" && !event.repeat) {
+          event.preventDefault();
+          shoot();
+        }
+      });
+
+      showScores();
+      updateHud();
+      const initialBounds = scene.getBoundingClientRect();
+      aimPoint = { x: initialBounds.width / 2, y: initialBounds.height / 2 };
+      aim.style.left = `${aimPoint.x}px`;
+      aim.style.top = `${aimPoint.y}px`;
+    })();
+  </script>
+</body>
+</html>

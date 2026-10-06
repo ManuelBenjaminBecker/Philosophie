@@ -400,8 +400,8 @@
       <div class="modal-eyebrow">Qualifikation geschafft · 8 von 10</div>
       <h1 id="level-title">Level 2</h1>
       <p>Die nächste Geisterwelle bringt <strong>mittelschwere Fragen</strong> zum Manifest. Pass auf: Die Geister bewegen sich jetzt deutlich schneller!</p>
-      <button class="primary-button" id="continue" type="button">LEVEL 2 STARTEN</button>
-      <p class="manifest-note">Deine Punkte, Leben und Restzeit bleiben erhalten.</p>
+      <button class="primary-button" id="continue" type="button">JETZT WEITER</button>
+      <p class="manifest-note">Level 2 startet automatisch. Punkte, Leben und Restzeit bleiben erhalten.</p>
     </section>
   </div>
 
@@ -573,6 +573,8 @@
       let seconds = 120;
       let started = false;
       let locked = false;
+      let levelTransitionPending = false;
+      let levelTransitionTimer = null;
       let timer = null;
       let ghosts = [];
       let aimPoint = { x: 0, y: 0 };
@@ -755,11 +757,11 @@
         window.setTimeout(() => {
           round += 1;
           firstAttemptMade = false;
+          if (level === 0 && firstTryCorrect >= 8) {
+            unlockLevelTwo();
+            return;
+          }
           if (round >= currentQuestions().length) {
-            if (level === 0 && firstTryCorrect >= 8) {
-              unlockLevelTwo();
-              return;
-            }
             if (level === 0) {
               finish(false, "qualification");
               return;
@@ -798,6 +800,7 @@
       function unlockLevelTwo() {
         started = false;
         locked = true;
+        levelTransitionPending = true;
         window.clearInterval(timer);
         clearGhosts();
         level = 1;
@@ -807,9 +810,13 @@
         levelModal.classList.remove("hidden");
         document.querySelector("#continue").focus();
         presentQuestion();
+        levelTransitionTimer = window.setTimeout(beginLevelTwo, 1200);
       }
 
       function beginLevelTwo() {
+        if (!levelTransitionPending) return;
+        window.clearTimeout(levelTransitionTimer);
+        levelTransitionPending = false;
         levelModal.classList.add("hidden");
         started = true;
         locked = false;
@@ -826,7 +833,7 @@
         endEyebrow.textContent = won ? "Alle Geister vertrieben" : "Die Geister ziehen weiter";
         endTitle.textContent = won ? "Manifest gemeistert!" : "Die Jagd ist vorbei";
         if (won) {
-          endCopy.textContent = `Du hast beide Level mit ${questions.length + mediumQuestions.length} Fragen gemeistert und ${score} Punkte gesammelt. Europa ist fürs Erste geisterfrei!`;
+          endCopy.textContent = `Du hast beide Level gemeistert und ${score} Punkte gesammelt. Europa ist fürs Erste geisterfrei!`;
         } else if (reason === "qualification") {
           endCopy.textContent = `Du hast ${firstTryCorrect} von 10 Fragen im ersten Versuch richtig beantwortet. Für Level 2 brauchst du mindestens 8. Gesammelt: ${score} Punkte.`;
         } else if (reason === "lives") {
@@ -839,6 +846,8 @@
       }
 
       function startGame() {
+        window.clearTimeout(levelTransitionTimer);
+        levelTransitionPending = false;
         round = 0;
         level = 0;
         firstTryCorrect = 0;

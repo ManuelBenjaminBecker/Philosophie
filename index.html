@@ -89,6 +89,7 @@
     .hud-label { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
     .hud-value { margin-top: 4px; font-size: 20px; font-weight: 800; }
     .hud-center { text-align: center; }
+    .round-note { margin-top: 5px; color: var(--muted); font-size: 10px; }
     .hud-right { text-align: right; }
     .hearts { color: var(--coral); letter-spacing: .12em; }
     .progress-track { height: 4px; margin-top: 9px; overflow: hidden; border-radius: 5px; background: rgba(255,255,255,.1); }
@@ -300,6 +301,7 @@
       .hud { gap: 8px; padding: 13px 12px; }
       .hud-label { font-size: 8px; letter-spacing: .1em; }
       .hud-value { font-size: 17px; }
+      .round-note { font-size: 8px; }
       .question-panel { padding: 15px 14px; }
       .question { min-height: 64px; }
       .scene { min-height: clamp(365px, 68vh, 520px); }
@@ -340,19 +342,20 @@
         <div class="hud-value" id="score">0000</div>
       </div>
       <div class="hud-center">
-        <div class="hud-label">Frage <span id="round">1</span> / <span id="total-rounds">10</span></div>
+        <div class="hud-label">Level <span id="level-number">1</span> · Frage <span id="round">1</span> / <span id="total-rounds">10</span></div>
         <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+        <div class="round-note" id="round-note">Ersttreffer: 0/10 für Level 2</div>
       </div>
       <div class="hud-right">
         <div class="hud-label">Zeit · Leben</div>
-        <div class="hud-value"><span id="time">60</span><span class="hearts" id="hearts"> ♥♥♥</span></div>
+        <div class="hud-value"><span id="time">120</span><span class="hearts" id="hearts"> ♥5</span></div>
       </div>
     </section>
 
     <section class="question-panel" aria-live="polite">
       <div class="question-tag" id="question-tag">Aufwärmrunde · Das Manifest</div>
       <div class="question" id="question">Die Geister sind unterwegs …</div>
-      <div class="question-hint">Finde die richtige Antwort und triff den Geist, der sie trägt.</div>
+      <div class="question-hint" id="question-hint">Finde die richtige Antwort und triff den Geist, der sie trägt.</div>
     </section>
 
     <section class="scene" id="scene" aria-label="Spielszene: bewege den Zeiger zum Geist und schieße">
@@ -386,9 +389,19 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-eyebrow">Das Gespenst geht um in Europa</div>
       <h1 id="modal-title">Manifest<br>Jagd</h1>
-      <p>Marx und Engels haben die Geister geweckt. Lies die Fragen, ziele auf den Geist mit der <strong>richtigen Antwort</strong> und wirf dein Wissen!</p>
+      <p>Marx und Engels haben die Geister geweckt. Triff in Level 1 mindestens <strong>8 von 10 Antworten im ersten Versuch</strong>, um Level 2 freizuschalten. Dort warten mittelschwere Fragen und schnellere Geister!</p>
       <button class="primary-button" id="start" type="button">JAGD BEGINNEN</button>
-      <p class="manifest-note">Maus / Touch zum Zielen · Leertaste zum Schießen<br>Am Handy: FEUER-Taste · Falsche Treffer kosten ein Leben</p>
+      <p class="manifest-note">Maus / Touch zum Zielen · Leertaste zum Schießen<br>Am Handy: FEUER-Taste · Falsche Antworten kosten ein Leben</p>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="level-modal">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="level-title">
+      <div class="modal-eyebrow">Qualifikation geschafft · 8 von 10</div>
+      <h1 id="level-title">Level 2</h1>
+      <p>Die nächste Geisterwelle bringt <strong>mittelschwere Fragen</strong> zum Manifest. Pass auf: Die Geister bewegen sich jetzt deutlich schneller!</p>
+      <button class="primary-button" id="continue" type="button">LEVEL 2 STARTEN</button>
+      <p class="manifest-note">Deine Punkte, Leben und Restzeit bleiben erhalten.</p>
     </section>
   </div>
 
@@ -466,6 +479,68 @@
           correct: 0
         }
       ];
+      const mediumQuestions = [
+        {
+          level: "Mittel · Entstehung",
+          question: "Welcher Zusammenschluss beauftragte Marx und Engels mit der Ausarbeitung des Manifests?",
+          answers: ["Der Bund der Kommunisten", "Die Erste Internationale", "Der Deutsche Zollverein"],
+          correct: 0
+        },
+        {
+          level: "Mittel · Weltmarkt",
+          question: "Welche Folge der Ausdehnung des Weltmarkts beschreiben Marx und Engels?",
+          answers: ["Die Produktion und der Verbrauch erhalten einen kosmopolitischen Charakter", "Der Handel zwischen Ländern kommt zum Erliegen", "Alle nationalen Unterschiede verschwinden sofort"],
+          correct: 0
+        },
+        {
+          level: "Mittel · Wandel",
+          question: "Wie verändert die Bourgeoisie laut Manifest fortwährend die Produktionsinstrumente?",
+          answers: ["Sie erhält sie in unveränderter Form", "Durch technische Umwälzung und die damit verbundene Veränderung der Produktionsverhältnisse", "Indem sie die industrielle Produktion abschafft"],
+          correct: 1
+        },
+        {
+          level: "Mittel · Krisen",
+          question: "Was kennzeichnet die im Manifest beschriebenen Krisen der bürgerlichen Gesellschaft?",
+          answers: ["Eine Überproduktion, die Waren und Produktivkräfte vernichtet", "Einen dauerhaften Mangel an allen hergestellten Gütern", "Ausschließlich Missernten in der Landwirtschaft"],
+          correct: 0
+        },
+        {
+          level: "Mittel · Proletariat",
+          question: "Warum wird das Proletariat laut Manifest mit der Entwicklung der großen Industrie zahlreicher?",
+          answers: ["Weil die Industrie kleine Werkstätten überall wiederherstellt", "Weil die große Industrie viele Arbeitende zusammenführt und ihre gemeinsame Lage sichtbar macht", "Weil alle Lohnarbeitenden zu Kapitalbesitzenden werden"],
+          correct: 1
+        },
+        {
+          level: "Mittel · Revolution",
+          question: "Welche Veränderung der Arbeit erleben Proletarier laut Manifest in der Fabrik?",
+          answers: ["Die Arbeit wird zum Anhang der Maschine und verliert ihren individuellen Charakter", "Jede Person kontrolliert allein den gesamten Produktionsprozess", "Die Arbeit kehrt zur mittelalterlichen Zunftordnung zurück"],
+          correct: 0
+        },
+        {
+          level: "Mittel · Programm",
+          question: "Was schlagen Marx und Engels für fortgeschrittene Länder als eine der Maßnahmen vor?",
+          answers: ["Eine starke Progressivsteuer", "Die Abschaffung öffentlicher Schulen", "Die Auflösung aller Verkehrswege"],
+          correct: 0
+        },
+        {
+          level: "Mittel · Bildung",
+          question: "Welche Bildungsforderung steht im Maßnahmenkatalog des Manifests?",
+          answers: ["Unentgeltlicher öffentlicher Unterricht für alle Kinder", "Privater Unterricht ausschließlich für die Bourgeoisie", "Abschaffung des Unterrichts für arbeitende Kinder"],
+          correct: 0
+        },
+        {
+          level: "Mittel · Bündnisse",
+          question: "Wie sollen Kommunisten laut Manifest zu anderen oppositionellen Parteien stehen?",
+          answers: ["Sie unterstützen Bewegungen gegen die bestehende gesellschaftliche und politische Ordnung", "Sie lehnen jede Zusammenarbeit mit anderen Bewegungen grundsätzlich ab", "Sie stellen überall die Unterstützung der Monarchie an erste Stelle"],
+          correct: 0
+        },
+        {
+          level: "Mittel · Perspektive",
+          question: "Welche Vorstellung von der Entwicklung der Klassengegensätze formuliert das Manifest für die moderne bürgerliche Gesellschaft?",
+          answers: ["Sie werden durch die moderne Industrie vereinfacht und treten deutlicher hervor", "Sie verschwinden vollständig mit der Ausbreitung des Handels", "Sie bleiben unverändert auf Adel und Klerus beschränkt"],
+          correct: 0
+        }
+      ];
 
       const scene = document.querySelector("#scene");
       const aim = document.querySelector("#aim");
@@ -475,25 +550,36 @@
       const timeEl = document.querySelector("#time");
       const heartsEl = document.querySelector("#hearts");
       const roundEl = document.querySelector("#round");
+      const levelNumberEl = document.querySelector("#level-number");
+      const totalRoundsEl = document.querySelector("#total-rounds");
+      const roundNoteEl = document.querySelector("#round-note");
       const progressEl = document.querySelector("#progress");
       const feedbackEl = document.querySelector("#feedback");
+      const questionHintEl = document.querySelector("#question-hint");
       const startModal = document.querySelector("#start-modal");
       const endModal = document.querySelector("#end-modal");
+      const levelModal = document.querySelector("#level-modal");
       const endTitle = document.querySelector("#end-title");
       const endEyebrow = document.querySelector("#end-eyebrow");
       const endCopy = document.querySelector("#end-copy");
       const fireButton = document.querySelector("#fire");
+      const maxLives = 5;
+      let level = 0;
       let round = 0;
+      let firstTryCorrect = 0;
+      let firstAttemptMade = false;
       let score = 0;
-      let lives = 3;
-      let seconds = 60;
+      let lives = maxLives;
+      let seconds = 120;
       let started = false;
       let locked = false;
       let timer = null;
       let ghosts = [];
       let aimPoint = { x: 0, y: 0 };
 
-      document.querySelector("#total-rounds").textContent = questions.length;
+      function currentQuestions() {
+        return level === 0 ? questions : mediumQuestions;
+      }
 
       function placeAim(clientX, clientY) {
         const bounds = scene.getBoundingClientRect();
@@ -552,9 +638,14 @@
       function updateHud() {
         scoreEl.textContent = String(score).padStart(4, "0");
         timeEl.textContent = seconds;
-        heartsEl.textContent = ` ${"♥".repeat(lives)}${"♡".repeat(3 - lives)}`;
-        roundEl.textContent = Math.min(round + 1, questions.length);
-        progressEl.style.width = `${(round / questions.length) * 100}%`;
+        heartsEl.textContent = ` ♥${lives}`;
+        levelNumberEl.textContent = level + 1;
+        roundEl.textContent = Math.min(round + 1, currentQuestions().length);
+        totalRoundsEl.textContent = currentQuestions().length;
+        roundNoteEl.textContent = level === 0
+          ? `Ersttreffer: ${firstTryCorrect}/10 für Level 2`
+          : "Mittel · Geister 2× schneller";
+        progressEl.style.width = `${(round / currentQuestions().length) * 100}%`;
       }
 
       function clearGhosts() {
@@ -564,7 +655,7 @@
 
       function spawnGhosts() {
         clearGhosts();
-        const current = questions[round];
+        const current = currentQuestions()[round];
         const positions = [
           { x: 18, y: 38 }, { x: 50, y: 59 }, { x: 82, y: 36 }
         ];
@@ -583,12 +674,13 @@
           element.querySelector(".ghost-label").textContent = answer.text;
           const pos = positions[index];
           const drift = (Math.random() * 2 - 1) * 9;
+          const speedMultiplier = level === 0 ? 1 : 2.2;
           const state = {
             element, correct: answer.correct,
             x: (pos.x / 100) * scene.clientWidth,
             y: (pos.y / 100) * scene.clientHeight,
-            vx: (Math.random() < .5 ? -1 : 1) * (0.26 + round * .025),
-            vy: drift * .016
+            vx: (Math.random() < .5 ? -1 : 1) * (0.26 + round * .025) * speedMultiplier,
+            vy: drift * .016 * speedMultiplier
           };
           element.style.left = `${pos.x}%`;
           element.style.top = `${pos.y}%`;
@@ -640,6 +732,7 @@
         }
         if (!target.correct) {
           target.element.classList.add("wrong");
+          firstAttemptMade = true;
           lives -= 1;
           updateHud();
           feedbackEl.textContent = "Falsche Antwort! Ein Leben verloren.";
@@ -647,17 +740,30 @@
           flash.className = "flash";
           scene.append(flash);
           window.setTimeout(() => flash.remove(), 250);
-          if (lives <= 0) finish(false);
+          if (lives <= 0) finish(false, "lives");
           return;
         }
+        if (!firstAttemptMade) firstTryCorrect += 1;
+        firstAttemptMade = true;
         locked = true;
         target.element.classList.add("hit");
         score += 100 + Math.max(0, seconds) * 2;
-        feedbackEl.textContent = "Treffer! Wissen sitzt. +Punkte";
+        feedbackEl.textContent = level === 0
+          ? `Richtig! Ersttreffer ${firstTryCorrect}/10 für Level 2.`
+          : "Richtig! Wissen sitzt. +Punkte";
         updateHud();
         window.setTimeout(() => {
           round += 1;
-          if (round >= questions.length) {
+          firstAttemptMade = false;
+          if (round >= currentQuestions().length) {
+            if (level === 0 && firstTryCorrect >= 8) {
+              unlockLevelTwo();
+              return;
+            }
+            if (level === 0) {
+              finish(false, "qualification");
+              return;
+            }
             finish(true);
             return;
           }
@@ -667,15 +773,51 @@
       }
 
       function presentQuestion() {
-        const current = questions[round];
+        const current = currentQuestions()[round];
         tagEl.textContent = current.level;
         questionEl.textContent = current.question;
-        feedbackEl.textContent = "Triff die richtige Antwort!";
+        questionHintEl.textContent = level === 0
+          ? "Mindestens 8 richtige Erstversuche schalten Level 2 frei. Falsche Treffer kosten ein Leben."
+          : "Die Geister sind schneller — ziele vorausschauend und triff die richtige Antwort.";
+        feedbackEl.textContent = firstAttemptMade
+          ? "Falscher Erstversuch — finde jetzt die richtige Antwort."
+          : "Triff die richtige Antwort!";
         updateHud();
         spawnGhosts();
       }
 
-      function finish(won) {
+      function startTimer() {
+        window.clearInterval(timer);
+        timer = window.setInterval(() => {
+          seconds -= 1;
+          updateHud();
+          if (seconds <= 0) finish(false, "time");
+        }, 1000);
+      }
+
+      function unlockLevelTwo() {
+        started = false;
+        locked = true;
+        window.clearInterval(timer);
+        clearGhosts();
+        level = 1;
+        round = 0;
+        firstTryCorrect = 0;
+        firstAttemptMade = false;
+        levelModal.classList.remove("hidden");
+        document.querySelector("#continue").focus();
+        presentQuestion();
+      }
+
+      function beginLevelTwo() {
+        levelModal.classList.add("hidden");
+        started = true;
+        locked = false;
+        animate();
+        startTimer();
+      }
+
+      function finish(won, reason = "") {
         if (!started) return;
         started = false;
         window.clearInterval(timer);
@@ -683,35 +825,41 @@
         saveScore();
         endEyebrow.textContent = won ? "Alle Geister vertrieben" : "Die Geister ziehen weiter";
         endTitle.textContent = won ? "Manifest gemeistert!" : "Die Jagd ist vorbei";
-        endCopy.textContent = won
-          ? `Du hast alle ${questions.length} Fragen geknackt und ${score} Punkte gesammelt. Europa ist fürs Erste geisterfrei!`
-          : `Du hast ${round} von ${questions.length} Fragen beantwortet und ${score} Punkte gesammelt. Lies dich schlau und komm wieder!`;
+        if (won) {
+          endCopy.textContent = `Du hast beide Level mit ${questions.length + mediumQuestions.length} Fragen gemeistert und ${score} Punkte gesammelt. Europa ist fürs Erste geisterfrei!`;
+        } else if (reason === "qualification") {
+          endCopy.textContent = `Du hast ${firstTryCorrect} von 10 Fragen im ersten Versuch richtig beantwortet. Für Level 2 brauchst du mindestens 8. Gesammelt: ${score} Punkte.`;
+        } else if (reason === "lives") {
+          endCopy.textContent = `Keine Leben mehr! Du hast ${firstTryCorrect} von 10 Fragen im ersten Versuch richtig beantwortet und ${score} Punkte gesammelt.`;
+        } else {
+          endCopy.textContent = `Die Zeit ist um! Du hast ${score} Punkte gesammelt. Lies dich schlau und komm wieder!`;
+        }
         endModal.classList.remove("hidden");
         document.querySelector("#restart").focus();
       }
 
       function startGame() {
         round = 0;
+        level = 0;
+        firstTryCorrect = 0;
+        firstAttemptMade = false;
         score = 0;
-        lives = 3;
-        seconds = 60;
+        lives = maxLives;
+        seconds = 120;
         started = true;
         locked = false;
         startModal.classList.add("hidden");
         endModal.classList.add("hidden");
+        levelModal.classList.add("hidden");
         presentQuestion();
         animate();
-        window.clearInterval(timer);
-        timer = window.setInterval(() => {
-          seconds -= 1;
-          updateHud();
-          if (seconds <= 0) finish(false);
-        }, 1000);
+        startTimer();
         scene.focus?.();
       }
 
       document.querySelector("#start").addEventListener("click", startGame);
       document.querySelector("#restart").addEventListener("click", startGame);
+      document.querySelector("#continue").addEventListener("click", beginLevelTwo);
       fireButton.addEventListener("pointerdown", event => {
         event.preventDefault();
         shoot();
